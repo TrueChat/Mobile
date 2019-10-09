@@ -2,10 +2,68 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
-const baseUrl = "";
+import 'package:true_chat/api/responses/login_response.dart';
+import 'package:true_chat/api/responses/response.dart';
+import 'package:true_chat/helpers/constants.dart';
+import 'package:true_chat/storage/shared_pref_manager.dart';
 
 class Api{
+  static const String _registrationEndpoint = "rest-auth/registration/";
+  static const String _loginEndpoint = 'rest-auth/login/';
+
+  static Map<String,String> _postHeaders = { "accept": "application/json", "content-type": "application/json" };
+  static Map<String,String> _authHeader(String refreshToken) => {HttpHeaders.authorizationHeader : "Basic $refreshToken"};
+  //Calls
+
+  static Future<Response> registration({String username, String email, String password,}) async{
+
+    Map data = {
+      "username" : username,
+      "email" : email,
+      "password1" : password,
+      "password2" : password,
+    };
+
+    String body = json.encode(data);
+    final response = await http.post(callUrl(_registrationEndpoint),
+        body: body,
+        headers: _postHeaders);
+    var res = json.decode(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      await SharedPrefManager.saveUser(accessToken: res['key']);
+      return LoginResponse(false,"Register Successful",res['key']);
+    }
+    String message = '';
+    for(MapEntry<String,List<String>> en in res){
+      message += '${en.key}: ${en.value[0]};';
+    }
+    return Response(true,message);
+  }
+
+  static Future<Response> login({String username, String email, @required String password}) async{
+    Map data = {
+      if(username != null) 'username' : username,
+      if(email != null) 'email' : email,
+      'password' : password
+    };
+
+    String body = json.encode(data);
+    final response = await http.post(callUrl(_loginEndpoint),
+        body: body,
+        headers: _postHeaders);
+    var res = json.decode(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      await SharedPrefManager.saveUser(accessToken: res['key']);
+      return LoginResponse(false,"Login Successful",res['key']);
+    }
+    String message = '';
+    for(MapEntry<String,List<String>> en in res){
+      message += '${en.key}: ${en.value[0]};';
+    }
+    return Response(true,message);
+  }
+
+
   //Helpers
   static String callUrl(String endpoint,[Map<String,String> query]){
     String res = baseUrl + endpoint;

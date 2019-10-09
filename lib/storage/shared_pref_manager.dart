@@ -4,26 +4,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPrefManager{
 
-  static Future<void> saveUser({@required String accessToken,
-    @required String refreshToken}) async{
+  static Future<void> saveUser({@required String accessToken}) async{
     SharedPreferences pref = await SharedPreferences.getInstance();
     pref.setString(accessTokenKey, accessToken);
-    pref.setString(refreshTokenKey, refreshToken);
   }
 
   static Future<String> getAccessToken() async{
     SharedPreferences pref = await SharedPreferences.getInstance();
     return pref.getString(accessTokenKey);
-  }
-
-  static Future<void> setAccessToken(String accessToken) async{
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    pref.setString(accessTokenKey, accessToken);
-  }
-
-  static Future<String> getRefreshToken() async{
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    return pref.getString(refreshTokenKey);
   }
 
   static Future<bool> isFirstLaunch() async{
@@ -40,9 +28,14 @@ class SharedPrefManager{
     return pref.containsKey(accessTokenKey);
   }
 
-  static Future<void> deleteTokens() async{
+  static Future<void> deleteToken() async{
     SharedPreferences pref = await SharedPreferences.getInstance();
     pref.remove(accessTokenKey);
-    pref.remove(refreshTokenKey);
+  }
+
+  static Future<void> clear() async{
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    pref.remove(accessTokenKey);
+    pref.remove(isFirstLaunchKey);
   }
 }

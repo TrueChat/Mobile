@@ -1,38 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:true_chat/storage/shared_pref_manager.dart';
+import 'package:true_chat/widgets/pages/home_page.dart';
+import 'package:true_chat/widgets/pages/login_page.dart';
+
+import 'helpers/constants.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    bool _isLoggedIn = false;
+
     return MaterialApp(
-      title: 'TrueChat',
       debugShowCheckedModeBanner: false,
-      home: MyHomePage(title: 'TrueChat'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
+      home: FutureBuilder(
+        future:  SharedPrefManager.isLoggedIn().then((value){
+          _isLoggedIn = value;
+        }),
+        builder: (context,snapshot){
+          return _isLoggedIn ? LogInPage() : HomePage();
+        },
       ),
-      body: Center(
-        child: Text(
-          'Hello TrueChat!',
+
+      theme: ThemeData(
+        primaryColor: primaryColor,
+        accentColor: accentColor,
+        backgroundColor: backgroundColor,
+        brightness: Brightness.dark,
+        textTheme: TextTheme(
+          headline: TextStyle(fontSize: 28.0, fontWeight: FontWeight.bold),
+          title: TextStyle(fontSize: 24.0),
+          body1: TextStyle(fontSize: 20.0),
+          button: TextStyle(fontSize: 24.0),
         ),
       ),
     );

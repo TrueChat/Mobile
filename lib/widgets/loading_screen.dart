@@ -33,7 +33,7 @@ class _LoadingScreenState extends State<LoadingScreen>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: colorPrimary,
+      backgroundColor: primaryColor,
       body: _isConnected ? _loading : _noConnection(),
     );
   }
@@ -44,7 +44,7 @@ class _LoadingScreenState extends State<LoadingScreen>{
       children: <Widget>[
         CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(
-              colorAccent),
+              accentColor),
         ),
         SizedBox(height: 20.0,),
         Text("Loading")
