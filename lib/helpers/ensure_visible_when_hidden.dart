@@ -53,23 +53,24 @@ class EnsureVisibleWhenFocused extends StatefulWidget {
   final Duration duration;
 
   @override
-  _EnsureVisibleWhenFocusedState createState() => new _EnsureVisibleWhenFocusedState();
+  _EnsureVisibleWhenFocusedState createState() =>
+      new _EnsureVisibleWhenFocusedState();
 }
 
 ///
 /// We implement the WidgetsBindingObserver to be notified of any change to the window metrics
 ///
-class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused> with WidgetsBindingObserver  {
-
+class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
+    with WidgetsBindingObserver {
   @override
-  void initState(){
+  void initState() {
     super.initState();
     widget.focusNode.addListener(_ensureVisible);
     WidgetsBinding.instance.addObserver(this);
   }
 
   @override
-  void dispose(){
+  void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.focusNode.removeListener(_ensureVisible);
     super.dispose();
@@ -83,8 +84,8 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused> wit
   /// the keyboard is displayed
   ///
   @override
-  void didChangeMetrics(){
-    if (widget.focusNode.hasFocus){
+  void didChangeMetrics() {
+    if (widget.focusNode.hasFocus) {
       _ensureVisible();
     }
   }
@@ -97,7 +98,7 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused> wit
   /// This method was suggested by Peter Yuen (see discussion).
   ///
   Future<Null> _keyboardToggled() async {
-    if (mounted){
+    if (mounted) {
       EdgeInsets edgeInsets = MediaQuery.of(context).viewInsets;
       while (mounted && MediaQuery.of(context).viewInsets == edgeInsets) {
         await new Future.delayed(const Duration(milliseconds: 10));
@@ -109,10 +110,13 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused> wit
 
   Future<Null> _ensureVisible() async {
     // Wait for the keyboard to come into view
-    await Future.any([new Future.delayed(const Duration(milliseconds: 300)), _keyboardToggled()]);
+    await Future.any([
+      new Future.delayed(const Duration(milliseconds: 300)),
+      _keyboardToggled()
+    ]);
 
     // No need to go any further if the node has not the focus
-    if (!widget.focusNode.hasFocus){
+    if (!widget.focusNode.hasFocus) {
       return;
     }
 
@@ -136,7 +140,8 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused> wit
     if (position.pixels > viewport.getOffsetToReveal(object, 0.0).offset) {
       // Move down to the top of the viewport
       alignment = 0.0;
-    } else if (position.pixels < viewport.getOffsetToReveal(object, 1.0).offset){
+    } else if (position.pixels <
+        viewport.getOffsetToReveal(object, 1.0).offset) {
       // Move up to the bottom of the viewport
       alignment = 1.0;
     } else {
