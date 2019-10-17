@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:true_chat/helpers/constants.dart';
+import 'package:true_chat/widgets/pages/user_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -35,6 +36,12 @@ class _HomePageState extends State<HomePage> {
           title: Center(
             child: Row(
               children: <Widget>[
+                Image.asset(
+                  'assets/launcher/foreground.png',
+                  height: 30.0,
+                  width: 30.0,
+                ),
+                SizedBox(width: 10.0,),
                 Text(
                   "True ",
                   style: TextStyle(fontSize: 28.0, color: primarySwatchColor),
@@ -49,7 +56,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           backgroundColor: appBarColor,
-          automaticallyImplyLeading: false,
         ),
         body: Builder(
           builder: (buildContext) {
@@ -58,6 +64,25 @@ class _HomePageState extends State<HomePage> {
           },
         ),
         backgroundColor: Theme.of(context).backgroundColor,
+        drawer: Drawer(
+          child: ListView(
+            children: <Widget>[
+              DrawerHeader(
+                child: Center(
+                  child: GestureDetector(
+                    child: CircleAvatar(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      radius: 100.0,
+                    ),
+                    onTap: () {
+                      goToPage(context, UserPage());
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

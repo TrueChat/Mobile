@@ -10,17 +10,17 @@ import 'package:true_chat/storage/storage_manager.dart';
 class Api {
   static const String _registrationEndpoint = "rest-auth/registration/";
   static const String _loginEndpoint = 'rest-auth/login/';
+  static String _profileEndpoint({@required int id}) => '/profile/$id';
 
   static Map<String, String> _postHeaders = {
     "accept": "application/json",
-    "content-type": "application/json"
+    "Content-Type": "application/json"
   };
 
-  static Map<String, String> _authHeader(String refreshToken) =>
-      {HttpHeaders.authorizationHeader: "Basic $refreshToken"};
+  static Map<String, String> _authHeader(String accessToken) =>
+      {HttpHeaders.authorizationHeader: "Basic $accessToken"};
 
   //Calls
-
   static Future<Response> registration({
     String username,
     String email,
@@ -35,44 +35,49 @@ class Api {
 
     String body = json.encode(data);
     final response = await http.post(callUrl(_registrationEndpoint),
-        body: body, headers: _postHeaders);
+        headers: _postHeaders, body: body);
+
+    if (response.statusCode >= 500) {
+      return Response(true, smthWentWrong);
+    }
+
     var res = json.decode(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       await StorageManager.saveUser(accessToken: res['key']);
       return LoginResponse(false, "Register Successful", res['key']);
     }
-    String message = '';
-    for (MapEntry<String, List<String>> en in res) {
-      message += '${en.key}: ${en.value[0]};';
-    }
+    String message =
+        '${res.keys.toList()[0]}: ${res.values.toList()[0][0].toString()};';
     return Response(true, message);
   }
 
   static Future<Response> login(
       {String username, String email, @required String password}) async {
     Map data = {
-      if (username != null) 'username': username,
       if (email != null) 'email': email,
+      if (username != null) 'username': username,
       'password': password
     };
-
+    String url = callUrl(_loginEndpoint);
     String body = json.encode(data);
-    final response = await http.post(callUrl(_loginEndpoint),
-        body: body, headers: _postHeaders);
-    var res = json.decode(response.body);
+    final response = await http.post(url, headers: _postHeaders, body: body);
+
+    if (response.statusCode >= 500) {
+      return Response(true, smthWentWrong);
+    }
+
+    Map<String, dynamic> res = json.decode(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       await StorageManager.saveUser(accessToken: res['key']);
       return LoginResponse(false, "Login Successful", res['key']);
     }
-    String message = '';
-    for (MapEntry<String, List<String>> en in res) {
-      message += '${en.key}: ${en.value[0]};';
-    }
+    String message =
+        '${res.keys.toList()[0]}: ${res.values.toList()[0][0].toString()};';
     return Response(true, message);
   }
 
   //Helpers
-  static String callUrl(String endpoint, [Map<String, String> query]) {
+  static String callUrl(String endpoint, {Map<String, String> query}) {
     String res = baseUrl + endpoint;
     if (query != null) {
       res += "?";
@@ -80,7 +85,10 @@ class Api {
         res += "$key=$value&";
       });
     }
-    return res.substring(0, res.length - 1);
+    if (query != null) {
+      res.substring(0, res.length - 1);
+    }
+    return res;
   }
 
   static Map<String, dynamic> _parseJwt(String token) {

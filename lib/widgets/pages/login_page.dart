@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:true_chat/api/api.dart';
-import 'package:true_chat/api/responses/login_response.dart';
-import 'package:true_chat/api/responses/response.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:true_chat/blocs/bloc.dart';
+import 'package:true_chat/blocs/login/login_bloc.dart';
+import 'package:true_chat/blocs/login/login_event.dart';
+import 'package:true_chat/blocs/login/login_state.dart';
 import 'package:true_chat/helpers/constants.dart';
 import 'package:true_chat/helpers/ensure_visible_when_hidden.dart';
-import 'package:true_chat/storage/storage_manager.dart';
 import 'package:true_chat/widgets/pages/home_page.dart';
 
 class LogInPage extends StatefulWidget {
@@ -15,7 +16,9 @@ class LogInPage extends StatefulWidget {
 }
 
 class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
-  int _currentPressed = 0;
+  LoginBloc _loginBloc;
+  LoginPageControllerBloc _loginPageControllerBloc;
+
   PageController _controller = PageController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
@@ -34,69 +37,106 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
   FocusNode _focusNodeRegPassword = FocusNode();
 
   BuildContext _scaffoldContext;
-  bool _isLoading = false;
+
   final _formKey = GlobalKey<FormState>();
   final _regFormKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
+    _loginBloc = LoginBloc();
+    _loginPageControllerBloc = LoginPageControllerBloc();
     WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _emailController.dispose();
+    _passwordController.dispose();
+    _regUsernameController.dispose();
+    _regPasswordController.dispose();
+    _regPassword2Controller.dispose();
+    _regEmailController.dispose();
+    _controller.dispose();
+    _loginBloc.dispose();
+    _loginPageControllerBloc.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Row(
-            children: <Widget>[
-              Text(
-                "True ",
-                style: Theme.of(context)
-                    .textTheme
-                    .headline
-                    .copyWith(color: primarySwatchColor),
-              ),
-              Text(
-                "chat",
-                style: Theme.of(context)
-                    .textTheme
-                    .headline
-                    .copyWith(color: Theme.of(context).accentColor),
-              )
-            ],
-            mainAxisAlignment: MainAxisAlignment.center,
-          ),
-        ),
-        backgroundColor: appBarColor,
-      ),
-      body: Builder(builder: (context) {
-        _scaffoldContext = context;
-        return Stack(
-          children: <Widget>[
-            _body(),
-            if (_isLoading)
-              Container(
-                color: Theme.of(context).backgroundColor.withOpacity(0.9),
-                child: Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).accentColor),
-                  ),
+    return BlocProvider(
+      builder: (context) => _loginBloc,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Row(
+              children: <Widget>[
+                Image.asset(
+                  'assets/launcher/foreground.png',
+                  height: 30.0,
+                  width: 30.0,
                 ),
-              ),
-          ],
-        );
-      }),
-      resizeToAvoidBottomInset: true,
-      backgroundColor: Color(0xFF262632),
+                SizedBox(width: 10.0,),
+                Text(
+                  "True ",
+                  style: Theme.of(context)
+                      .textTheme
+                      .headline
+                      .copyWith(color: primarySwatchColor),
+                ),
+                Text(
+                  "chat",
+                  style: Theme.of(context)
+                      .textTheme
+                      .headline
+                      .copyWith(color: Theme.of(context).accentColor),
+                )
+              ],
+              mainAxisAlignment: MainAxisAlignment.center,
+            ),
+          ),
+          backgroundColor: appBarColor,
+        ),
+        body: BlocListener<LoginBloc, LoginState>(
+          listener: (context, state) {
+            if (state is LoginStateError) {
+              snackBar(_scaffoldContext, state.message, Colors.red);
+            } else if (state is LoginStateSuccess) {
+              Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => HomePage()),
+                  (Route<dynamic> route) => false);
+            }
+          },
+          child: Builder(builder: (context) {
+            _scaffoldContext = context;
+            return BlocBuilder(
+                bloc: _loginBloc,
+                builder: (context, state) {
+                  return Stack(
+                    children: <Widget>[
+                      _body(),
+                      if (state is LoginStateLoading)
+                        Container(
+                          color: Theme.of(context)
+                              .backgroundColor
+                              .withOpacity(0.9),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Theme.of(context).accentColor),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                });
+          }),
+        ),
+        resizeToAvoidBottomInset: true,
+        backgroundColor: Color(0xFF262632),
+      ),
     );
   }
 
@@ -106,47 +146,11 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
         SizedBox(
           height: 20.0,
         ),
-        Row(
-          children: <Widget>[
-            GestureDetector(
-              child: Container(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    "Sign In",
-                    style: Theme.of(context).textTheme.title,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                decoration: _decoration(0),
-              ),
-              onTap: () {
-                _menuPressed(0);
-              },
-            ),
-            SizedBox(
-              width: 50.0,
-            ),
-            GestureDetector(
-              child: Container(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    "Sign Up",
-                    style: Theme.of(context).textTheme.title,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                decoration: _decoration(1),
-              ),
-              onTap: () {
-                _menuPressed(1);
-              },
-            ),
-          ],
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.center,
-        ),
+        BlocBuilder(
+            bloc: _loginPageControllerBloc,
+            builder: (context, state) {
+              return topMenuRow();
+            }),
         Expanded(
           child: _getPage(),
         )
@@ -155,14 +159,58 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
     );
   }
 
+  Widget topMenuRow() => Row(
+        children: <Widget>[
+          GestureDetector(
+            child: Container(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  "Sign In",
+                  style: Theme.of(context).textTheme.title,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              decoration: _decoration(0),
+            ),
+            onTap: () {
+              _menuPressed(0);
+            },
+          ),
+          SizedBox(
+            width: 50.0,
+          ),
+          GestureDetector(
+            child: Container(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  "Sign Up",
+                  style: Theme.of(context).textTheme.title,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              decoration: _decoration(1),
+            ),
+            onTap: () {
+              _menuPressed(1);
+            },
+          ),
+        ],
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.center,
+      );
+
   BoxDecoration _decoration(int num) {
     Color color;
-    if (_currentPressed == num) {
+    if (_loginPageControllerBloc.state is PageState) {}
+    if (num ==
+        (_loginPageControllerBloc.currentState as PageState)
+            .currentPressedIndex) {
       color = fontColor;
     } else {
       color = Colors.transparent;
     }
-
     return BoxDecoration(
       border: Border(bottom: BorderSide(color: color, width: 3.0)),
     );
@@ -176,11 +224,16 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
         _registerPage(),
       ],
       onPageChanged: (index) {
-        setState(() {
-          _currentPressed = index;
-        });
+        _loginPageControllerBloc
+            .dispatch(PageChange(currentPressedIndex: index));
       },
     );
+  }
+
+  _menuPressed(int index) {
+    _loginPageControllerBloc.dispatch(PageChange(currentPressedIndex: index));
+    _controller.animateToPage(index,
+        duration: Duration(milliseconds: 500), curve: Curves.ease);
   }
 
   InputDecoration _textFieldDecoration(String labelText) => InputDecoration(
@@ -431,87 +484,21 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
         ),
       );
 
-  _menuPressed(int index) {
-    setState(() {
-      _currentPressed = index;
-      _controller.animateToPage(index,
-          duration: Duration(milliseconds: 500), curve: Curves.ease);
-    });
+  _logInPressed() {
+    if (_formKey.currentState.validate()) {
+      _loginBloc.dispatch(LoginSubmitted(
+          login: _emailController.text, password: _passwordController.text));
+    }
   }
 
   _registerPressed() {
     if (_regFormKey.currentState.validate()) {
-      bool isThenReached = false;
-      setState(() {
-        _isLoading = true;
-      });
       String username = _regUsernameController.text;
       String password = _regPasswordController.text;
       String email = _regEmailController.text;
 
-      Api.registration(username: username, email: email, password: password)
-          .then((res) async {
-        isThenReached = true;
-        LoginResponse response = res;
-        if (!res.isError) {
-          await StorageManager.saveUser(accessToken: response.accessToken);
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => HomePage()),
-              (Route<dynamic> route) => false);
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
-          snackBar(_scaffoldContext, response.message);
-        }
-      }).whenComplete(() {
-        setState(() {
-          _isLoading = false;
-        });
-        if (!isThenReached) {
-          snackBar(_scaffoldContext, noInternet);
-        }
-      });
-    }
-  }
-
-  _logInPressed() {
-    if (_formKey.currentState.validate()) {
-      bool isThenReached = false;
-      String username, email;
-      String password = _passwordController.text;
-
-      if (loginRegExp.hasMatch(_emailController.text)) {
-        username = _emailController.text;
-      } else {
-        email = _emailController.text;
-      }
-      Future<Response> loginResponse = username == null
-          ? Api.login(email: email, password: password)
-          : Api.login(username: username, password: password);
-
-      loginResponse.then((res) async {
-        isThenReached = true;
-        LoginResponse response = res;
-        if (!res.isError) {
-          await StorageManager.saveUser(accessToken: response.accessToken);
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => HomePage()),
-              (Route<dynamic> route) => false);
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
-          snackBar(_scaffoldContext, response.message);
-        }
-      }).whenComplete(() {
-        setState(() {
-          _isLoading = false;
-        });
-        if (!isThenReached) {
-          snackBar(_scaffoldContext, noInternet);
-        }
-      });
+      _loginBloc.dispatch(RegisterSubmitted(
+          email: email, username: username, password: password));
     }
   }
 }

@@ -8,7 +8,7 @@ const emailHint = "Email";
 const loginHint = "Login";
 const passwordHint = "Password";
 const password2Hint = "Confirm password";
-const noInternet = "Failed to connect to server!";
+const smthWentWrong = "Something went wrong";
 
 //SharedPreferences
 const accessTokenKey = "jwt";
@@ -18,6 +18,7 @@ const isFirstLaunchKey = "first_launch";
 const Color primaryColor = Color(0xFF614bf8);
 const Color accentColor = Color(0xFFFC9E4F);
 const Color backgroundColor = Color(0xFF2D2D37);
+const Color containerColor = Color(0xFF292933);
 const Color primarySwatchColor = Color(0xFFD66247);
 const Color appBarColor = Color(0xFF12121d);
 const Color fontColor = Color(0xFFc6c6c9);
