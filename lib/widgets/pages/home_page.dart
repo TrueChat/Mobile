@@ -7,6 +7,7 @@ import 'package:true_chat/api/api.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/user_response.dart';
 import 'package:true_chat/helpers/constants.dart';
+import 'package:true_chat/storage/storage_manager.dart';
 import 'package:true_chat/widgets/pages/user_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -109,18 +110,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _initUserData() {
-    try {
-      Api.getCurrentUser().then((response) {
-        User user = (response as UserResponse).user;
-        setState(() {
-          firstName = user.firstName ?? 'N';
-          lastName = user.lastName ?? 'S';
-        });
-      });
-    } on SocketException {
-      snackBar(_scaffoldContext, noConnectionMessage, Colors.red);
-    }
+  _initUserData() async{
+    User user = await StorageManager.getUser();
+    setState(() {
+      firstName = user.firstName ?? 'N';
+      lastName = user.lastName ?? 'S';
+    });
   }
 
   Widget _body() {

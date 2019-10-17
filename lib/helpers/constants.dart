@@ -15,6 +15,14 @@ const literallyAnything = 'Literally anything.';
 //SharedPreferences
 const accessTokenKey = "jwt";
 const isFirstLaunchKey = "first_launch";
+const nameKey = 'name';
+const surnameKey = 'surname';
+const usernameKey = 'username';
+const aboutKey = 'about';
+const idKey = 'user_id';
+const dateJoinedKey = 'dateJoined';
+const emailKey = 'email';
+const lastLoginKey = 'lastLogin';
 
 //Colors
 const Color primaryColor = Color(0xFF614bf8);

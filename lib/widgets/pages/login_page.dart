@@ -104,6 +104,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
             if (state is LoginStateError) {
               snackBar(_scaffoldContext, state.message, Colors.red);
             } else if (state is LoginStateSuccess) {
+
               Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (context) => HomePage()),
                   (Route<dynamic> route) => false);

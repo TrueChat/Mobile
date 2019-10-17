@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:true_chat/api/api.dart';
 import 'package:true_chat/api/responses/response.dart';
+import 'package:true_chat/api/responses/user_response.dart';
 import 'package:true_chat/helpers/constants.dart';
+import 'package:true_chat/storage/storage_manager.dart';
 import '../bloc.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
@@ -36,6 +38,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           if (loginResponse.isError) {
             yield LoginStateError(message: loginResponse.message);
           } else {
+            await Api.getCurrentUser();
             yield LoginStateSuccess(response: loginResponse);
           }
         } else {

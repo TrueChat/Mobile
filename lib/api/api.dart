@@ -47,7 +47,7 @@ class Api {
 
     var res = json.decode(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      await StorageManager.saveUser(accessToken: res['key']);
+      await StorageManager.saveAccessToken(accessToken: res['key']);
       return LoginResponse(false, "Register Successful", res['key']);
     }
     String message =
@@ -72,7 +72,7 @@ class Api {
 
     Map<String, dynamic> res = json.decode(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      await StorageManager.saveUser(accessToken: res['key']);
+      await StorageManager.saveAccessToken(accessToken: res['key']);
       return LoginResponse(false, "Login Successful", res['key']);
     }
     String message =
@@ -90,15 +90,17 @@ class Api {
     }
     var res = json.decode(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return UserResponse(
-          false, "User fetched successfuly", User.fromJson(res));
+      User user = User.fromJson(res);
+      await StorageManager.saveUser(user: user);
+      return UserResponse(false, "User fetched successfuly", user);
     }
     String message =
         '${res.keys.toList()[0]}: ${res.values.toList()[0][0].toString()};';
     return Response(true, message);
   }
 
-  static Future<Response> changeUserData({String name, String surname, String bio}) async {
+  static Future<Response> changeUserData(
+      {String name, String surname, String bio}) async {
     String accessToken = await StorageManager.getAccessToken();
 
     Map data = {
@@ -113,7 +115,7 @@ class Api {
       body = json.encode(data);
     }
 
-    Map<String,String> headers = Map();
+    Map<String, String> headers = Map();
     headers.addAll(_authHeader(accessToken));
     headers.addAll(_postHeaders);
 
@@ -125,7 +127,8 @@ class Api {
     }
     var res = json.decode(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return Response(false,"Updated Successfully");
+      await getCurrentUser();
+      return Response(false, "Updated Successfully");
     }
     String message =
         '${res.keys.toList()[0]}: ${res.values.toList()[0][0].toString()};';

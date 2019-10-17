@@ -1,3 +1,6 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:true_chat/helpers/constants.dart';
+
 class User{
   final int id;
   final String username;
@@ -10,6 +13,19 @@ class User{
 
   User({this.id, this.username, this.email, this.firstName, this.lastName,
       this.about, this.dateJoined, this.lastLogin});
+
+  factory User.fromPref({SharedPreferences pref}){
+    return User(
+      id: pref.getInt(idKey),
+      username: pref.getString(usernameKey),
+      email: pref.getString(emailKey),
+      firstName: pref.getString(nameKey),
+      lastName: pref.getString(surnameKey),
+      about: pref.getString(aboutKey),
+      dateJoined: pref.getString(dateJoinedKey),
+      lastLogin: pref.getString(lastLoginKey)
+    );
+  }
 
   factory User.fromJson(Map<String,dynamic> json){
     return User(
