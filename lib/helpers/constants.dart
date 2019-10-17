@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 //Strings
 const appName = "TrueChat";
 const noConnectionMessage = "No connection";
-const baseUrl = "https://true-chat.herokuapp.com/";
 const emailHint = "Email";
 const loginHint = "Login";
 const passwordHint = "Password";
 const password2Hint = "Confirm password";
 const smthWentWrong = "Something went wrong";
+const noConnection = "noConnection";
+const yourName = "Name Surname";
+const literallyAnything = 'Literally anything.';
 
 //SharedPreferences
 const accessTokenKey = "jwt";

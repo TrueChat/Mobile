@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:true_chat/api/api.dart';
+import 'package:true_chat/api/models/user.dart';
+import 'package:true_chat/api/responses/user_response.dart';
 import 'package:true_chat/blocs/user_settings/user_settings_bloc.dart';
 import 'package:true_chat/helpers/constants.dart';
-import 'package:true_chat/helpers/constants.dart' as constants;
+import 'package:true_chat/widgets/loading_screen.dart';
 
 class UserSettingsPage extends StatefulWidget {
   @override
@@ -12,16 +15,21 @@ class UserSettingsPage extends StatefulWidget {
 class _UserSettingsPageState extends State<UserSettingsPage> {
   UserSettingsBloc _userSettingsBloc;
 
+  LoadingScreen _loadingScreen;
+
   bool _isNamePressed = false;
   bool _isUsernamePressed = false;
   bool _isBioPressed = false;
+  bool _isLoading = true;
+
+  BuildContext _scaffoldContext;
 
   TextEditingController _nameController = TextEditingController();
-  String _currentName = 'Name Surname';
   TextEditingController _usernameController = TextEditingController();
-  String _currentUsername = 'StandartUsername';
   TextEditingController _bioController = TextEditingController();
-  String _currentBio = 'Literally anything.';
+  String _currentName;
+  String _currentUsername;
+  String _currentBio;
 
   InputDecoration _textFieldDecoration = InputDecoration(
       enabledBorder: UnderlineInputBorder(
@@ -40,12 +48,14 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                   .copyWith(color: Colors.white, fontWeight: FontWeight.bold),
               autofocus: true,
               onSubmitted: (query) {
-                _currentName = _nameController.text;
                 setState(() {
                   _isNamePressed = !_isNamePressed;
                 });
               },
               decoration: _textFieldDecoration,
+              onChanged: (query) {
+                _currentName = query;
+              },
             ),
           ),
         )
@@ -65,10 +75,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                 Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
             autofocus: true,
             onSubmitted: (query) {
-              _currentUsername = _usernameController.text;
               setState(() {
                 _isUsernamePressed = !_isUsernamePressed;
               });
+            },
+            onChanged: (query) {
+              _currentUsername = query;
             },
             decoration: _textFieldDecoration,
           ),
@@ -81,25 +93,25 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
 
   Widget _bioWidget() => _isBioPressed
       ? TextField(
-        minLines: 1,
-        maxLines: 3,
-        textInputAction: TextInputAction.done,
-        controller: _bioController,
-        style:
-            Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
-        autofocus: true,
-        onSubmitted: (query) {
-          _currentBio = _bioController.text;
-          setState(() {
-            _isBioPressed = !_isBioPressed;
-          });
-        },
-        decoration: _textFieldDecoration,
-      )
+          minLines: 1,
+          maxLines: 5,
+          textInputAction: TextInputAction.done,
+          controller: _bioController,
+          style:
+              Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+          autofocus: true,
+          onSubmitted: (query) {
+            setState(() {
+              _isBioPressed = !_isBioPressed;
+            });
+          },
+          onChanged: (query) {
+            _currentBio = query;
+          },
+          decoration: _textFieldDecoration,
+        )
       : Text(
           _currentBio,
-          maxLines: 4,
-          overflow: TextOverflow.ellipsis,
           style:
               Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
         );
@@ -108,9 +120,38 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   void initState() {
     super.initState();
     _userSettingsBloc = UserSettingsBloc();
+    _loadingScreen = LoadingScreen(
+      doWhenReload: _initUserData(),
+    );
+  }
+
+  _updateControllers() {
     _usernameController.text = _currentUsername;
     _nameController.text = _currentName;
     _bioController.text = _currentBio;
+  }
+
+  _initUserData() {
+    bool isThenReached = false;
+    Api.getCurrentUser().then((response) {
+      isThenReached = true;
+      if (response.isError) {
+        snackBar(_scaffoldContext, response.message, Colors.red);
+      } else {
+        User user = (response as UserResponse).user;
+        setState(() {
+          _currentName = user.firstName ?? yourName;
+          _currentBio = user.about ?? literallyAnything;
+          _currentUsername = user.username;
+          _updateControllers();
+          _isLoading = false;
+        });
+      }
+    }).whenComplete(() {
+      if (!isThenReached) {
+        _loadingScreen.state.noConnection(message: noConnection);
+      }
+    });
   }
 
   @override
@@ -137,7 +178,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         ),
         backgroundColor: appBarColor,
       ),
-      body: _body(),
+      body: Builder(
+        builder: (context) {
+          _scaffoldContext = context;
+          return _isLoading ? _loadingScreen : _body();
+        },
+      ),
       backgroundColor: Theme.of(context).backgroundColor,
     );
   }
@@ -177,6 +223,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                           onPressed: () {
                             setState(() {
                               if (!_isNamePressed) {
+                                _isBioPressed = false;
+                                _isUsernamePressed = false;
                                 _isNamePressed = !_isNamePressed;
                               }
                             });
@@ -190,7 +238,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                   height: 10.0,
                 ),
                 Container(
-                  color: constants.containerColor,
+                  color: containerColor,
                   child: Padding(
                     padding: const EdgeInsets.all(10.0).copyWith(left: 20.0),
                     child: Row(
@@ -228,6 +276,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                           onPressed: () {
                             setState(() {
                               if (!_isUsernamePressed) {
+                                _isNamePressed = false;
+                                _isBioPressed = false;
                                 _isUsernamePressed = !_isUsernamePressed;
                               }
                             });
@@ -241,7 +291,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                   height: 10.0,
                 ),
                 Container(
-                  color: constants.containerColor,
+                  color: containerColor,
                   child: Padding(
                     padding:
                         EdgeInsets.all(10.0).copyWith(left: 20.0, bottom: 20.0),
@@ -256,7 +306,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                                 height: 10.0,
                               ),
                               Text(
-                                "You can write anything about you.",
+                                "You can write anything about you:",
                                 style: Theme.of(context)
                                     .textTheme
                                     .body1
@@ -278,6 +328,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                           onPressed: () {
                             setState(() {
                               if (!_isBioPressed) {
+                                _isNamePressed = false;
+                                _isUsernamePressed = false;
                                 _isBioPressed = !_isBioPressed;
                               }
                             });
@@ -299,7 +351,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 10.0),
             child: RawMaterialButton(
-              onPressed: () {},
+              onPressed: _submitPressed,
               child: Icon(
                 Icons.done,
                 color: Theme.of(context).backgroundColor,
@@ -314,5 +366,35 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         ),
       ],
     );
+  }
+
+  _submitPressed() {
+    setState(() {
+      _isLoading = true;
+    });
+    String name;
+    String bio;
+    if(_currentName != yourName){
+      name = _currentName;
+    }
+    if(_currentBio != literallyAnything){
+      bio = _currentBio;
+    }
+    bool isThenReached = false;
+    Api.changeUserData(name: name,bio: bio).then((response){
+      isThenReached = true;
+      if(response.isError){
+        snackBar(_scaffoldContext,response.message,Colors.red);
+      }else{
+        setState(() {
+          _isLoading = false;
+        });
+        snackBar(_scaffoldContext,response.message,Colors.green);
+      }
+    }).whenComplete((){
+      if(!isThenReached){
+        _loadingScreen.state.noConnection(message: noConnection);
+      }
+    });
   }
 }

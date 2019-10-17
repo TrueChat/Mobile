@@ -4,13 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:true_chat/api/responses/login_response.dart';
 import 'package:true_chat/api/responses/response.dart';
+import 'package:true_chat/api/responses/user_response.dart';
 import 'package:true_chat/helpers/constants.dart';
 import 'package:true_chat/storage/storage_manager.dart';
 
+import 'models/user.dart';
+
 class Api {
+  static const _baseUrl = "https://true-chat.herokuapp.com/";
   static const String _registrationEndpoint = "rest-auth/registration/";
   static const String _loginEndpoint = 'rest-auth/login/';
-  static String _profileEndpoint({@required int id}) => '/profile/$id';
+  static const String _profileEndpoint = 'profile';
 
   static Map<String, String> _postHeaders = {
     "accept": "application/json",
@@ -18,7 +22,7 @@ class Api {
   };
 
   static Map<String, String> _authHeader(String accessToken) =>
-      {HttpHeaders.authorizationHeader: "Basic $accessToken"};
+      {HttpHeaders.authorizationHeader: "Token $accessToken"};
 
   //Calls
   static Future<Response> registration({
@@ -76,9 +80,60 @@ class Api {
     return Response(true, message);
   }
 
+  static Future<Response> getCurrentUser() async {
+    String accessToken = await StorageManager.getAccessToken();
+
+    final response = await http.get(callUrl(_profileEndpoint),
+        headers: _authHeader(accessToken));
+    if (response.statusCode >= 500) {
+      return Response(true, smthWentWrong);
+    }
+    var res = json.decode(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return UserResponse(
+          false, "User fetched successfuly", User.fromJson(res));
+    }
+    String message =
+        '${res.keys.toList()[0]}: ${res.values.toList()[0][0].toString()};';
+    return Response(true, message);
+  }
+
+  static Future<Response> changeUserData({String name, String bio}) async {
+    String accessToken = await StorageManager.getAccessToken();
+
+    Map data = {
+      if (name != null) 'first_name': name,
+      if (bio != null) 'about': bio,
+    };
+
+    String body;
+
+    if (data.isNotEmpty) {
+      body = json.encode(data);
+    }
+
+    Map<String,String> headers = Map();
+    headers.addAll(_authHeader(accessToken));
+    headers.addAll(_postHeaders);
+
+    final response = await http.put('${callUrl(_profileEndpoint)}/',
+        headers: headers, body: body);
+
+    if (response.statusCode >= 500) {
+      return Response(true, smthWentWrong);
+    }
+    var res = json.decode(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return Response(false,"Updated Successfully");
+    }
+    String message =
+        '${res.keys.toList()[0]}: ${res.values.toList()[0][0].toString()};';
+    return Response(true, message);
+  }
+
   //Helpers
   static String callUrl(String endpoint, {Map<String, String> query}) {
-    String res = baseUrl + endpoint;
+    String res = _baseUrl + endpoint;
     if (query != null) {
       res += "?";
       query.forEach((key, value) {
