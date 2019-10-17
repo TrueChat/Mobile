@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/api.dart';
@@ -132,26 +134,30 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   }
 
   _initUserData() {
-    bool isThenReached = false;
-    Api.getCurrentUser().then((response) {
-      isThenReached = true;
-      if (response.isError) {
-        snackBar(_scaffoldContext, response.message, Colors.red);
-      } else {
-        User user = (response as UserResponse).user;
-        setState(() {
-          _currentName = user.firstName ?? yourName;
-          _currentBio = user.about ?? literallyAnything;
-          _currentUsername = user.username;
-          _updateControllers();
-          _isLoading = false;
-        });
-      }
-    }).whenComplete(() {
-      if (!isThenReached) {
-        _loadingScreen.state.noConnection(message: noConnection);
-      }
-    });
+    try{
+      bool isThenReached = false;
+      Api.getCurrentUser().then((response) {
+        isThenReached = true;
+        if (response.isError) {
+          _loadingScreen.state.noConnection(message: response.message);
+        } else {
+          User user = (response as UserResponse).user;
+          setState(() {
+            _currentName = user.firstName ?? yourName;
+            _currentBio = user.about ?? literallyAnything;
+            _currentUsername = user.username;
+            _updateControllers();
+            _isLoading = false;
+          });
+        }
+      }).whenComplete(() {
+        if (!isThenReached) {
+          _loadingScreen.state.noConnection(message: noConnection);
+        }
+      });
+    }on SocketException{
+      _loadingScreen.state.noConnection(message: noConnection);
+    }
   }
 
   @override
@@ -369,32 +375,37 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   }
 
   _submitPressed() {
-    setState(() {
-      _isLoading = true;
-    });
-    String name;
-    String bio;
-    if(_currentName != yourName){
-      name = _currentName;
-    }
-    if(_currentBio != literallyAnything){
-      bio = _currentBio;
-    }
-    bool isThenReached = false;
-    Api.changeUserData(name: name,bio: bio).then((response){
-      isThenReached = true;
-      if(response.isError){
-        snackBar(_scaffoldContext,response.message,Colors.red);
-      }else{
-        setState(() {
-          _isLoading = false;
-        });
-        snackBar(_scaffoldContext,response.message,Colors.green);
+    try{
+      setState(() {
+        _isLoading = true;
+      });
+      String name;
+      String bio;
+      if(_currentName != yourName){
+        name = _currentName;
       }
-    }).whenComplete((){
-      if(!isThenReached){
-        _loadingScreen.state.noConnection(message: noConnection);
+      if(_currentBio != literallyAnything){
+        bio = _currentBio;
       }
-    });
+      bool isThenReached = false;
+      Api.changeUserData(name: name,bio: bio).then((response){
+        isThenReached = true;
+        if(response.isError){
+          snackBar(_scaffoldContext,response.message,Colors.red);
+        }else{
+          setState(() {
+            _isLoading = false;
+          });
+          snackBar(_scaffoldContext,response.message,Colors.green);
+        }
+      }).whenComplete((){
+        if(!isThenReached){
+          _loadingScreen.state.noConnection(message: noConnection);
+        }
+      });
+    }on SocketException{
+      _loadingScreen.state.noConnection(message: noConnection);
+    }
+
   }
 }

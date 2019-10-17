@@ -8,7 +8,7 @@ const loginHint = "Login";
 const passwordHint = "Password";
 const password2Hint = "Confirm password";
 const smthWentWrong = "Something went wrong";
-const noConnection = "noConnection";
+const noConnection = "No connection";
 const yourName = "Name Surname";
 const literallyAnything = 'Literally anything.';
 
