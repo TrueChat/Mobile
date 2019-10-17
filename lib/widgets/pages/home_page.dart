@@ -1,7 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:true_chat/api/api.dart';
+import 'package:true_chat/api/models/user.dart';
+import 'package:true_chat/api/responses/user_response.dart';
 import 'package:true_chat/helpers/constants.dart';
 import 'package:true_chat/widgets/pages/user_page.dart';
 
@@ -14,6 +18,17 @@ class _HomePageState extends State<HomePage> {
   BuildContext _scaffoldContext;
 
   bool _isBackTappedTwice = false;
+
+  String firstName = 'N';
+  String lastName = 'S';
+
+  @override
+  void initState() {
+    _initUserData();
+    super.initState();
+  }
+
+  String _initialText() => '${firstName[0]}${lastName[0]}'.toUpperCase();
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +56,9 @@ class _HomePageState extends State<HomePage> {
                   height: 30.0,
                   width: 30.0,
                 ),
-                SizedBox(width: 10.0,),
+                SizedBox(
+                  width: 10.0,
+                ),
                 Text(
                   "True ",
                   style: TextStyle(fontSize: 28.0, color: primarySwatchColor),
@@ -70,9 +87,14 @@ class _HomePageState extends State<HomePage> {
               DrawerHeader(
                 child: Center(
                   child: GestureDetector(
-                    child: CircleAvatar(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      radius: 100.0,
+                    child: CircularProfileAvatar(
+                      '',
+                      radius: 40.0,
+                      initialsText: Text(
+                        _initialText(),
+                        style: TextStyle(fontSize: 40, color: Colors.white),
+                      ),
+                      backgroundColor: primaryColor,
                     ),
                     onTap: () {
                       goToPage(context, UserPage());
@@ -85,6 +107,20 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  _initUserData() {
+    try {
+      Api.getCurrentUser().then((response) {
+        User user = (response as UserResponse).user;
+        setState(() {
+          firstName = user.firstName ?? 'N';
+          lastName = user.lastName ?? 'S';
+        });
+      });
+    } on SocketException {
+      snackBar(_scaffoldContext, noConnectionMessage, Colors.red);
+    }
   }
 
   Widget _body() {

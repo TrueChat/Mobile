@@ -1,4 +1,6 @@
+import 'package:easy_localization/easy_localization_delegate.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:true_chat/helpers/constants.dart';
 import 'package:true_chat/storage/storage_manager.dart';
 import 'package:true_chat/widgets/pages/home_page.dart';
@@ -38,6 +40,14 @@ class MyApp extends StatelessWidget {
           button: TextStyle(fontSize: 22.0),
         ),
       ),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('en')
+      ],
     );
   }
 }

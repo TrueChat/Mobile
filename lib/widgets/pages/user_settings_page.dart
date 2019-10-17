@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/api.dart';
@@ -27,11 +28,16 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   BuildContext _scaffoldContext;
 
   TextEditingController _nameController = TextEditingController();
+  TextEditingController _surNameController = TextEditingController();
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _bioController = TextEditingController();
   String _currentName;
+  String _currentSurname;
   String _currentUsername;
   String _currentBio;
+
+  FocusNode _focusNodeSurname = FocusNode();
+  FocusNode _focusNodeName = FocusNode();
 
   InputDecoration _textFieldDecoration = InputDecoration(
       enabledBorder: UnderlineInputBorder(
@@ -42,31 +48,67 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   Widget _nameWidget() => _isNamePressed
       ? Expanded(
           child: SizedBox(
-            child: TextField(
-              controller: _nameController,
+              child: Column(
+            children: <Widget>[
+              TextField(
+                controller: _nameController,
+                style: Theme.of(context)
+                    .textTheme
+                    .body1
+                    .copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                autofocus: true,
+                onSubmitted: (query) {
+                  _fieldFocusChange(context, _focusNodeName, _focusNodeSurname);
+                },
+                decoration: _textFieldDecoration,
+                onChanged: (query) {
+                  _currentName = query;
+                },
+                focusNode: _focusNodeName,
+                textInputAction: TextInputAction.next,
+              ),
+              TextField(
+                controller: _surNameController,
+                style: Theme.of(context)
+                    .textTheme
+                    .body1
+                    .copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                autofocus: true,
+                onSubmitted: (query) {
+                  setState(() {
+                    _isNamePressed = !_isNamePressed;
+                  });
+                },
+                decoration: _textFieldDecoration,
+                onChanged: (query) {
+                  _currentSurname = query;
+                },
+                focusNode: _focusNodeSurname,
+              ),
+            ],
+          )),
+        )
+      : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              _currentName,
               style: Theme.of(context)
                   .textTheme
                   .body1
                   .copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-              autofocus: true,
-              onSubmitted: (query) {
-                setState(() {
-                  _isNamePressed = !_isNamePressed;
-                });
-              },
-              decoration: _textFieldDecoration,
-              onChanged: (query) {
-                _currentName = query;
-              },
             ),
-          ),
-        )
-      : Text(
-          _currentName,
-          style: Theme.of(context)
-              .textTheme
-              .body1
-              .copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            SizedBox(
+              height: 10.0,
+            ),
+            Text(
+              _currentSurname,
+              style: Theme.of(context)
+                  .textTheme
+                  .body1
+                  .copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            )
+          ],
         );
 
   Widget _usernameWidget() => _isUsernamePressed
@@ -130,11 +172,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   _updateControllers() {
     _usernameController.text = _currentUsername;
     _nameController.text = _currentName;
+    _surNameController.text = _currentSurname;
     _bioController.text = _currentBio;
   }
 
   _initUserData() {
-    try{
+    try {
       bool isThenReached = false;
       Api.getCurrentUser().then((response) {
         isThenReached = true;
@@ -144,6 +187,10 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
           User user = (response as UserResponse).user;
           setState(() {
             _currentName = user.firstName ?? yourName;
+            _currentSurname = user.lastName ?? yourSurName;
+            if (_currentSurname == "") {
+              _currentSurname = yourSurName;
+            }
             _currentBio = user.about ?? literallyAnything;
             _currentUsername = user.username;
             _updateControllers();
@@ -152,11 +199,11 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         }
       }).whenComplete(() {
         if (!isThenReached) {
-          _loadingScreen.state.noConnection(message: noConnection);
+          _loadingScreen.state.noConnection(message: noConnectionMessage);
         }
       });
-    }on SocketException{
-      _loadingScreen.state.noConnection(message: noConnection);
+    } on SocketException {
+      _loadingScreen.state.noConnection(message: noConnectionMessage);
     }
   }
 
@@ -167,6 +214,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     _usernameController.dispose();
     _bioController.dispose();
     super.dispose();
+  }
+
+  void _fieldFocusChange(
+      BuildContext context, FocusNode currentFocus, FocusNode nextFocus) {
+    currentFocus.unfocus();
+    FocusScope.of(context).requestFocus(nextFocus);
   }
 
   @override
@@ -194,6 +247,9 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     );
   }
 
+  String _initialText() =>
+      '${_nameController.text[0]}${_surNameController.text[0]}'.toUpperCase();
+
   Widget _body() {
     return Stack(
       children: <Widget>[
@@ -208,9 +264,14 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     padding: const EdgeInsets.all(10.0).copyWith(left: 20.0),
                     child: Row(
                       children: <Widget>[
-                        CircleAvatar(
-                          backgroundColor: primaryColor,
+                        CircularProfileAvatar(
+                          '',
                           radius: 40.0,
+                          initialsText: Text(
+                            _initialText(),
+                            style: TextStyle(fontSize: 40, color: Colors.white),
+                          ),
+                          backgroundColor: primaryColor,
                         ),
                         SizedBox(
                           width: 20.0,
@@ -375,37 +436,41 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   }
 
   _submitPressed() {
-    try{
+    try {
       setState(() {
         _isLoading = true;
       });
       String name;
       String bio;
-      if(_currentName != yourName){
+      String surname;
+      if (_currentName != yourName) {
         name = _currentName;
       }
-      if(_currentBio != literallyAnything){
+      if (_currentBio != literallyAnything) {
         bio = _currentBio;
       }
+      if (_currentSurname != yourSurName) {
+        surname = _currentSurname;
+      }
       bool isThenReached = false;
-      Api.changeUserData(name: name,bio: bio).then((response){
+      Api.changeUserData(name: name, surname: surname, bio: bio)
+          .then((response) {
         isThenReached = true;
-        if(response.isError){
-          snackBar(_scaffoldContext,response.message,Colors.red);
-        }else{
+        if (response.isError) {
+          snackBar(_scaffoldContext, response.message, Colors.red);
+        } else {
           setState(() {
             _isLoading = false;
           });
-          snackBar(_scaffoldContext,response.message,Colors.green);
+          snackBar(_scaffoldContext, response.message, Colors.green);
         }
-      }).whenComplete((){
-        if(!isThenReached){
-          _loadingScreen.state.noConnection(message: noConnection);
+      }).whenComplete(() {
+        if (!isThenReached) {
+          _loadingScreen.state.noConnection(message: noConnectionMessage);
         }
       });
-    }on SocketException{
-      _loadingScreen.state.noConnection(message: noConnection);
+    } on SocketException {
+      _loadingScreen.state.noConnection(message: noConnectionMessage);
     }
-
   }
 }

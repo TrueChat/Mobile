@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 //Strings
 const appName = "TrueChat";
-const noConnectionMessage = "No connection";
 const emailHint = "Email";
 const loginHint = "Login";
 const passwordHint = "Password";
 const password2Hint = "Confirm password";
 const smthWentWrong = "Something went wrong";
-const noConnection = "No connection";
-const yourName = "Name Surname";
+const noConnectionMessage = "No connection";
+const yourName = "Name";
+const yourSurName = "Surname";
 const literallyAnything = 'Literally anything.';
 
 //SharedPreferences

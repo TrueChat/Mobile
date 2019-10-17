@@ -98,12 +98,13 @@ class Api {
     return Response(true, message);
   }
 
-  static Future<Response> changeUserData({String name, String bio}) async {
+  static Future<Response> changeUserData({String name, String surname, String bio}) async {
     String accessToken = await StorageManager.getAccessToken();
 
     Map data = {
       if (name != null) 'first_name': name,
       if (bio != null) 'about': bio,
+      if (surname != null) 'last_name': surname,
     };
 
     String body;

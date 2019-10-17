@@ -4,26 +4,14 @@ import '../bloc.dart';
 
 class UserSettingsBloc extends Bloc<UserSettingsEvent, UserSettingsState> {
   @override
-  UserSettingsState get initialState => InitialUserSettingsState();
+  UserSettingsState get initialState => UserLoadingState();
 
   @override
   Stream<UserSettingsState> mapEventToState(
     UserSettingsEvent event,
   ) async* {
     if(event is EditPressed){
-      switch(event.id){
-        case 0:
-          yield EditNameState(name: event.data);
-          break;
 
-        case 1:
-          yield EditUsernameState(username: event.data);
-          break;
-
-        case 2:
-          yield EditBioState(bio: event.data);
-          break;
-      }
 
     }else if(event is SubmitPressed){
 

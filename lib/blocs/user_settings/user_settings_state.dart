@@ -4,34 +4,33 @@ abstract class UserSettingsState extends Equatable {
   const UserSettingsState();
 }
 
-class InitialUserSettingsState extends UserSettingsState {
+class UserLoadingState extends UserSettingsState {
   @override
   List<Object> get props => [];
 }
 
-class EditNameState extends UserSettingsState{
-  final String name;
+class UserLoadedState extends UserSettingsState {
 
-  EditNameState({this.name});
+  bool isNamePressed ;
+  bool isUsernamePressed ;
+  bool isBioPressed ;
+
+  String currentName;
+  String currentUsername;
+  String currentBio;
 
   @override
-  List<Object> get props => [name];
+  List<Object> get props => [
+        isNamePressed,
+        isUsernamePressed,
+        isBioPressed,
+        currentName,
+        currentUsername,
+        currentBio
+      ];
 }
 
-class EditUsernameState extends UserSettingsState{
-  final String username;
-
-  EditUsernameState({this.username});
-
+class UserNotLoadedState extends UserSettingsState {
   @override
-  List<Object> get props => [username];
-}
-
-class EditBioState extends UserSettingsState{
-  final String bio;
-
-  EditBioState({this.bio});
-
-  @override
-  List<Object> get props => [bio];
+  List<Object> get props => [];
 }

@@ -42,7 +42,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           yield LoginStateError(message: smthWentWrong);
         }
       } on SocketException {
-        yield LoginStateError(message: noConnection);
+        yield LoginStateError(message: noConnectionMessage);
       }
     } else if (event is RegisterSubmitted) {
       try {
@@ -62,7 +62,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           yield LoginStateError(message: smthWentWrong);
         }
       } on SocketException {
-        yield LoginStateError(message: noConnection);
+        yield LoginStateError(message: noConnectionMessage);
       }
     }
   }
