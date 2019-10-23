@@ -7,6 +7,7 @@ import 'package:true_chat/api/api.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/user_response.dart';
 import 'package:true_chat/helpers/constants.dart';
+import 'package:true_chat/helpers/constants.dart' as prefix0;
 import 'package:true_chat/storage/storage_manager.dart';
 import 'package:true_chat/widgets/pages/user_page.dart';
 
@@ -53,7 +54,7 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               children: <Widget>[
                 Image.asset(
-                  'assets/launcher/foreground.png',
+                  logoAsset,
                   height: 30.0,
                   width: 30.0,
                 ),
@@ -61,14 +62,9 @@ class _HomePageState extends State<HomePage> {
                   width: 10.0,
                 ),
                 Text(
-                  "True ",
-                  style: TextStyle(fontSize: 28.0, color: primarySwatchColor),
+                  "True chat",
+                  style: TextStyle(fontSize: 28.0, color: accentColor),
                 ),
-                Text(
-                  "Chat",
-                  style: TextStyle(
-                      fontSize: 28.0, color: Theme.of(context).accentColor),
-                )
               ],
               mainAxisAlignment: MainAxisAlignment.center,
             ),
@@ -113,8 +109,8 @@ class _HomePageState extends State<HomePage> {
   _initUserData() async{
     User user = await StorageManager.getUser();
     setState(() {
-      firstName = user.firstName ?? 'N';
-      lastName = user.lastName ?? 'S';
+      firstName = user.firstName == null || user.firstName == '' ? 'N' : user.firstName;
+      lastName = user.lastName == null || user.lastName == '' ? 'S' : user.lastName;
     });
   }
 

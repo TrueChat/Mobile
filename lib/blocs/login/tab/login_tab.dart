@@ -1,0 +1,1 @@
+enum LoginTab { signIn, signUp }

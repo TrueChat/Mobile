@@ -59,7 +59,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           if (registerResponse.isError) {
             yield LoginStateError(message: registerResponse.message);
           } else {
-            yield LoginStateSuccess(response: registerResponse);
+            yield RegisterStateSuccess();
           }
         } else {
           yield LoginStateError(message: smthWentWrong);

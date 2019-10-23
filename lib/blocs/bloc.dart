@@ -1,9 +1,6 @@
 export 'login/login_bloc.dart';
 export 'login/login_event.dart';
 export 'login/login_state.dart';
-export 'login/login_page_controller/login_page_controller_bloc.dart';
-export 'login/login_page_controller/login_page_controller_event.dart';
-export 'login/login_page_controller/login_page_controller_state.dart';
-export 'user_settings/user_settings_bloc.dart';
-export 'user_settings/user_settings_event.dart';
-export 'user_settings/user_settings_state.dart';
+export 'login/tab/login_tab_bloc.dart';
+export 'login/tab/login_tab_event.dart';
+export 'login/tab/login_tab.dart';

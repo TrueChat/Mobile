@@ -12,9 +12,10 @@ import 'models/user.dart';
 
 class Api {
   static const _baseUrl = "https://true-chat.herokuapp.com/";
-  static const String _registrationEndpoint = "rest-auth/registration/";
-  static const String _loginEndpoint = 'rest-auth/login/';
-  static const String _profileEndpoint = 'profile';
+  static const _registrationEndpoint = "rest-auth/registration/";
+  static const _loginEndpoint = 'rest-auth/login/';
+  static const _profileEndpoint = 'profile';
+  static const _logoutEndpoint = 'rest-auth/logout/';
 
   static Map<String, String> _postHeaders = {
     "accept": "application/json",
@@ -47,11 +48,10 @@ class Api {
 
     var res = json.decode(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      await StorageManager.saveAccessToken(accessToken: res['key']);
-      return LoginResponse(false, "Register Successful", res['key']);
+      return Response(false, "Register Successful");
     }
     String message =
-        '${res.keys.toList()[0]}: ${res.values.toList()[0][0].toString()};';
+        '${res.values.toList()[0][0].toString()}';
     return Response(true, message);
   }
 
@@ -76,7 +76,7 @@ class Api {
       return LoginResponse(false, "Login Successful", res['key']);
     }
     String message =
-        '${res.keys.toList()[0]}: ${res.values.toList()[0][0].toString()};';
+        '${res.values.toList()[0][0].toString()}';
     return Response(true, message);
   }
 
@@ -95,18 +95,34 @@ class Api {
       return UserResponse(false, "User fetched successfuly", user);
     }
     String message =
-        '${res.keys.toList()[0]}: ${res.values.toList()[0][0].toString()};';
+        '${res.values.toList()[0][0].toString()};';
     return Response(true, message);
   }
 
+  static Future<Response> logout() async{
+    String accessToken = await StorageManager.getAccessToken();
+    final response = await http.post(callUrl(_logoutEndpoint),
+        headers: _authHeader(accessToken));
+
+    if (response.statusCode >= 500) {
+      return Response(true, smthWentWrong);
+    }
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      await StorageManager.clear();
+      return Response(false, "Logout successfully");
+    }
+    return Response(false, smthWentWrong);
+  }
+
   static Future<Response> changeUserData(
-      {String name, String surname, String bio}) async {
+      {String name, String surname, String bio, @required String username}) async {
     String accessToken = await StorageManager.getAccessToken();
 
     Map data = {
       if (name != null) 'first_name': name,
       if (bio != null) 'about': bio,
       if (surname != null) 'last_name': surname,
+      'username':username
     };
 
     String body;
@@ -131,7 +147,7 @@ class Api {
       return Response(false, "Updated Successfully");
     }
     String message =
-        '${res.keys.toList()[0]}: ${res.values.toList()[0][0].toString()};';
+        '${res.values.toList()[0][0].toString()}';
     return Response(true, message);
   }
 

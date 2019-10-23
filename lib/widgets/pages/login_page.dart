@@ -5,6 +5,7 @@ import 'package:true_chat/blocs/login/login_bloc.dart';
 import 'package:true_chat/blocs/login/login_event.dart';
 import 'package:true_chat/blocs/login/login_state.dart';
 import 'package:true_chat/helpers/constants.dart';
+import 'package:true_chat/helpers/constants.dart' as prefix0;
 import 'package:true_chat/helpers/ensure_visible_when_hidden.dart';
 import 'package:true_chat/widgets/pages/home_page.dart';
 
@@ -74,25 +75,20 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
             child: Row(
               children: <Widget>[
                 Image.asset(
-                  'assets/launcher/foreground.png',
+                  logoAsset,
                   height: 30.0,
                   width: 30.0,
                 ),
-                SizedBox(width: 10.0,),
-                Text(
-                  "True ",
-                  style: Theme.of(context)
-                      .textTheme
-                      .headline
-                      .copyWith(color: primarySwatchColor),
+                SizedBox(
+                  width: 10.0,
                 ),
                 Text(
-                  "chat",
+                  "True chat",
                   style: Theme.of(context)
                       .textTheme
                       .headline
-                      .copyWith(color: Theme.of(context).accentColor),
-                )
+                      .copyWith(color: accentColor),
+                ),
               ],
               mainAxisAlignment: MainAxisAlignment.center,
             ),
@@ -104,10 +100,24 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
             if (state is LoginStateError) {
               snackBar(_scaffoldContext, state.message, Colors.red);
             } else if (state is LoginStateSuccess) {
-
               Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (context) => HomePage()),
                   (Route<dynamic> route) => false);
+            } else if (state is RegisterStateSuccess) {
+              Scaffold.of(context).showSnackBar(SnackBar(
+                  content: Text(
+                    "Werify your email to log in",
+                    textAlign: TextAlign.center,
+                  ),
+                  duration: Duration(minutes: 5),
+                  action: SnackBarAction(
+                    label: 'Ok',
+                    onPressed: () {
+                      Scaffold.of(_scaffoldContext).hideCurrentSnackBar();
+                    },
+                  )));
+              _loginPageControllerBloc
+                  .dispatch(PageChange(tab: LoginTab.signIn));
             }
           },
           child: Builder(builder: (context) {
@@ -172,10 +182,10 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                   textAlign: TextAlign.center,
                 ),
               ),
-              decoration: _decoration(0),
+              decoration: _decoration(LoginTab.signIn),
             ),
             onTap: () {
-              _menuPressed(0);
+              _menuPressed(0, LoginTab.signUp);
             },
           ),
           SizedBox(
@@ -191,10 +201,10 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                   textAlign: TextAlign.center,
                 ),
               ),
-              decoration: _decoration(1),
+              decoration: _decoration(LoginTab.signUp),
             ),
             onTap: () {
-              _menuPressed(1);
+              _menuPressed(1, LoginTab.signIn);
             },
           ),
         ],
@@ -202,12 +212,9 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
         mainAxisAlignment: MainAxisAlignment.center,
       );
 
-  BoxDecoration _decoration(int num) {
+  BoxDecoration _decoration(LoginTab tab) {
     Color color;
-    if (_loginPageControllerBloc.state is PageState) {}
-    if (num ==
-        (_loginPageControllerBloc.currentState as PageState)
-            .currentPressedIndex) {
+    if (tab != _loginPageControllerBloc.currentState) {
       color = fontColor;
     } else {
       color = Colors.transparent;
@@ -225,14 +232,14 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
         _registerPage(),
       ],
       onPageChanged: (index) {
-        _loginPageControllerBloc
-            .dispatch(PageChange(currentPressedIndex: index));
+        _loginPageControllerBloc.dispatch(
+            PageChange(tab: index == 0 ? LoginTab.signUp : LoginTab.signIn));
       },
     );
   }
 
-  _menuPressed(int index) {
-    _loginPageControllerBloc.dispatch(PageChange(currentPressedIndex: index));
+  _menuPressed(index, LoginTab tab) {
+    _loginPageControllerBloc.dispatch(PageChange(tab: tab));
     _controller.animateToPage(index,
         duration: Duration(milliseconds: 500), curve: Curves.ease);
   }

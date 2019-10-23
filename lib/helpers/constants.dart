@@ -12,6 +12,9 @@ const yourName = "Name";
 const yourSurName = "Surname";
 const literallyAnything = 'Literally anything.';
 
+//assets
+const logoAsset = 'assets/images/logo_icon.png';
+
 //SharedPreferences
 const accessTokenKey = "jwt";
 const isFirstLaunchKey = "first_launch";
@@ -26,10 +29,9 @@ const lastLoginKey = 'lastLogin';
 
 //Colors
 const Color primaryColor = Color(0xFF614bf8);
-const Color accentColor = Color(0xFFFC9E4F);
 const Color backgroundColor = Color(0xFF2D2D37);
 const Color containerColor = Color(0xFF292933);
-const Color primarySwatchColor = Color(0xFFD66247);
+const Color accentColor = Color(0xFFD66247);
 const Color appBarColor = Color(0xFF12121d);
 const Color fontColor = Color(0xFFc6c6c9);
 

@@ -26,6 +26,11 @@ class LoginStateSuccess extends LoginState {
   List<Object> get props => [response];
 }
 
+class RegisterStateSuccess extends LoginState {
+@override
+  List<Object> get props => null;
+}
+
 class LoginStateError extends LoginState {
   final String message;
 

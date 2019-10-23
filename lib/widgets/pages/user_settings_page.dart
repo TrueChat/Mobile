@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:true_chat/api/api.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/user_response.dart';
-import 'package:true_chat/blocs/user_settings/user_settings_bloc.dart';
 import 'package:true_chat/helpers/constants.dart';
 import 'package:true_chat/widgets/loading_screen.dart';
 
@@ -16,9 +15,8 @@ class UserSettingsPage extends StatefulWidget {
 }
 
 class _UserSettingsPageState extends State<UserSettingsPage> {
-  UserSettingsBloc _userSettingsBloc;
-
   LoadingScreen _loadingScreen;
+
 
   bool _isNamePressed = false;
   bool _isUsernamePressed = false;
@@ -41,9 +39,9 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
 
   InputDecoration _textFieldDecoration = InputDecoration(
       enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: primarySwatchColor, width: 2.0)),
+          borderSide: BorderSide(color: accentColor, width: 2.0)),
       focusedBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: primarySwatchColor, width: 2.0)));
+          borderSide: BorderSide(color: accentColor, width: 2.0)));
 
   Widget _nameWidget() => _isNamePressed
       ? Expanded(
@@ -163,7 +161,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   @override
   void initState() {
     super.initState();
-    _userSettingsBloc = UserSettingsBloc();
     _loadingScreen = LoadingScreen(
       doWhenReload: _initUserData(),
     );
@@ -186,12 +183,15 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         } else {
           User user = (response as UserResponse).user;
           setState(() {
-            _currentName = user.firstName ?? yourName;
-            _currentSurname = user.lastName ?? yourSurName;
-            if (_currentSurname == "") {
-              _currentSurname = yourSurName;
-            }
-            _currentBio = user.about ?? literallyAnything;
+            _currentName = user.firstName == null || user.firstName == ''
+                ? yourName
+                : user.firstName;
+            _currentSurname = user.lastName == null || user.lastName == ''
+                ? yourSurName
+                : user.lastName;
+            _currentBio = user.about == null || user.about == ''
+                ? literallyAnything
+                : user.about;
             _currentUsername = user.username;
             _updateControllers();
             _isLoading = false;
@@ -209,7 +209,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
 
   @override
   void dispose() {
-    _userSettingsBloc.dispose();
     _nameController.dispose();
     _usernameController.dispose();
     _bioController.dispose();
@@ -231,7 +230,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
             "Settings",
             style: TextStyle(
                 fontSize: 28.0,
-                color: primarySwatchColor,
+                color: accentColor,
                 fontWeight: FontWeight.bold),
           ),
         ),
@@ -426,7 +425,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
               ),
               shape: CircleBorder(),
               elevation: 2.0,
-              fillColor: primarySwatchColor,
+              fillColor: accentColor,
               padding: const EdgeInsets.all(5.0),
             ),
           ),
@@ -453,7 +452,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         surname = _currentSurname;
       }
       bool isThenReached = false;
-      Api.changeUserData(name: name, surname: surname, bio: bio)
+      Api.changeUserData(name: name, surname: surname, bio: bio,username: _currentUsername)
           .then((response) {
         isThenReached = true;
         if (response.isError) {
