@@ -1,10 +1,6 @@
 class Response {
-  bool _isError;
-  String _message;
+  Response(this.isError, this.message);
 
-  bool get isError => _isError;
-
-  String get message => _message;
-
-  Response(this._isError, this._message);
+  final bool isError;
+  final String message;
 }

@@ -5,7 +5,6 @@ import 'package:true_chat/blocs/login/login_bloc.dart';
 import 'package:true_chat/blocs/login/login_event.dart';
 import 'package:true_chat/blocs/login/login_state.dart';
 import 'package:true_chat/helpers/constants.dart';
-import 'package:true_chat/helpers/constants.dart' as prefix0;
 import 'package:true_chat/helpers/ensure_visible_when_hidden.dart';
 import 'package:true_chat/widgets/pages/home_page.dart';
 
@@ -20,22 +19,22 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
   LoginBloc _loginBloc;
   LoginPageControllerBloc _loginPageControllerBloc;
 
-  PageController _controller = PageController();
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  final PageController _controller = PageController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
-  TextEditingController _regUsernameController = TextEditingController();
-  TextEditingController _regPasswordController = TextEditingController();
-  TextEditingController _regPassword2Controller = TextEditingController();
-  TextEditingController _regEmailController = TextEditingController();
+  final TextEditingController _regUsernameController = TextEditingController();
+  final TextEditingController _regPasswordController = TextEditingController();
+  final TextEditingController _regPassword2Controller = TextEditingController();
+  final TextEditingController _regEmailController = TextEditingController();
 
-  FocusNode _focusNodeLoginEmail = FocusNode();
-  FocusNode _focusNodeLoginPassword = FocusNode();
+  final FocusNode _focusNodeLoginEmail = FocusNode();
+  final FocusNode _focusNodeLoginPassword = FocusNode();
 
-  FocusNode _focusNodeRegConfirmPassword = FocusNode();
-  FocusNode _focusNodeRegEmail = FocusNode();
-  FocusNode _focusNodeRegUsername = FocusNode();
-  FocusNode _focusNodeRegPassword = FocusNode();
+  final FocusNode _focusNodeRegConfirmPassword = FocusNode();
+  final FocusNode _focusNodeRegEmail = FocusNode();
+  final FocusNode _focusNodeRegUsername = FocusNode();
+  final FocusNode _focusNodeRegPassword = FocusNode();
 
   BuildContext _scaffoldContext;
 
@@ -71,27 +70,23 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
       builder: (context) => _loginBloc,
       child: Scaffold(
         appBar: AppBar(
-          title: Center(
-            child: Row(
-              children: <Widget>[
-                Image.asset(
-                  logoAsset,
-                  height: 30.0,
-                  width: 30.0,
-                ),
-                SizedBox(
-                  width: 10.0,
-                ),
-                Text(
-                  "True chat",
-                  style: Theme.of(context)
-                      .textTheme
-                      .headline
-                      .copyWith(color: accentColor),
-                ),
-              ],
-              mainAxisAlignment: MainAxisAlignment.center,
-            ),
+          centerTitle: true,
+          title: Row(
+            children: <Widget>[
+              Image.asset(
+                logoAsset,
+                height: 30.0,
+                width: 30.0,
+              ),
+              const SizedBox(
+                width: 10.0,
+              ),
+              Text(
+                'True chat',
+                style: TextStyle(fontSize: 28.0, color: accentColor),
+              ),
+            ],
+            mainAxisAlignment: MainAxisAlignment.center,
           ),
           backgroundColor: appBarColor,
         ),
@@ -100,13 +95,13 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
             if (state is LoginStateError) {
               snackBar(_scaffoldContext, state.message, Colors.red);
             } else if (state is LoginStateSuccess) {
-              Navigator.of(context).pushAndRemoveUntil(
+              Navigator.of(context).pushAndRemoveUntil<void>(
                   MaterialPageRoute(builder: (context) => HomePage()),
                   (Route<dynamic> route) => false);
             } else if (state is RegisterStateSuccess) {
               Scaffold.of(context).showSnackBar(SnackBar(
-                  content: Text(
-                    "Werify your email to log in",
+                  content: const Text(
+                    'Werify your email to log in',
                     textAlign: TextAlign.center,
                   ),
                   duration: Duration(minutes: 5),
@@ -117,12 +112,12 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                     },
                   )));
               _loginPageControllerBloc
-                  .dispatch(PageChange(tab: LoginTab.signIn));
+                  .dispatch(const PageChange(tab: LoginTab.signIn));
             }
           },
           child: Builder(builder: (context) {
             _scaffoldContext = context;
-            return BlocBuilder(
+            return BlocBuilder<LoginBloc,LoginState>(
                 bloc: _loginBloc,
                 builder: (context, state) {
                   return Stack(
@@ -146,7 +141,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
           }),
         ),
         resizeToAvoidBottomInset: true,
-        backgroundColor: Color(0xFF262632),
+        backgroundColor: const Color(0xFF262632),
       ),
     );
   }
@@ -154,10 +149,10 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
   Widget _body() {
     return Column(
       children: <Widget>[
-        SizedBox(
+        const SizedBox(
           height: 20.0,
         ),
-        BlocBuilder(
+        BlocBuilder<LoginPageControllerBloc,LoginTab>(
             bloc: _loginPageControllerBloc,
             builder: (context, state) {
               return topMenuRow();
@@ -177,7 +172,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  "Sign In",
+                  'Sign In',
                   style: Theme.of(context).textTheme.title,
                   textAlign: TextAlign.center,
                 ),
@@ -188,7 +183,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
               _menuPressed(0, LoginTab.signUp);
             },
           ),
-          SizedBox(
+          const SizedBox(
             width: 50.0,
           ),
           GestureDetector(
@@ -196,7 +191,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  "Sign Up",
+                  'Sign Up',
                   style: Theme.of(context).textTheme.title,
                   textAlign: TextAlign.center,
                 ),
@@ -238,14 +233,14 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
     );
   }
 
-  _menuPressed(index, LoginTab tab) {
+  void _menuPressed(int index, LoginTab tab) {
     _loginPageControllerBloc.dispatch(PageChange(tab: tab));
     _controller.animateToPage(index,
         duration: Duration(milliseconds: 500), curve: Curves.ease);
   }
 
   InputDecoration _textFieldDecoration(String labelText) => InputDecoration(
-        contentPadding: EdgeInsets.only(left: 10.0, right: 10.0, top: 35.0),
+        contentPadding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 35.0),
         border: OutlineInputBorder(
             borderSide: BorderSide(color: fontColor),
             borderRadius: BorderRadius.circular(5.0)),
@@ -292,7 +287,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                   },
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 25.0,
               ),
               Container(
@@ -315,7 +310,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                   },
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 25.0,
               ),
               _logInButton(),
@@ -337,7 +332,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
         child: RaisedButton(
           onPressed: () => _logInPressed(),
           child: Text(
-            "Submit",
+            'Submit',
             style: Theme.of(context)
                 .textTheme
                 .button
@@ -346,7 +341,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
           color: Theme.of(context).primaryColor,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-          padding: EdgeInsets.only(left: 30.0, right: 30.0),
+          padding: const EdgeInsets.only(left: 30.0, right: 30.0),
         ),
       );
 
@@ -382,7 +377,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                   },
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 30.0,
               ),
               Container(
@@ -409,7 +404,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                   },
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 30.0,
               ),
               Container(
@@ -434,7 +429,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                   },
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 30.0,
               ),
               Container(
@@ -463,7 +458,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 30.0,
               ),
               _registerButton()
@@ -479,7 +474,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
         child: RaisedButton(
           onPressed: () => _registerPressed(),
           child: Text(
-            "Submit",
+            'Submit',
             style: Theme.of(context)
                 .textTheme
                 .button
@@ -488,22 +483,22 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
           color: Theme.of(context).primaryColor,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-          padding: EdgeInsets.only(left: 30.0, right: 30.0),
+          padding: const EdgeInsets.only(left: 30.0, right: 30.0),
         ),
       );
 
-  _logInPressed() {
+  void _logInPressed() {
     if (_formKey.currentState.validate()) {
       _loginBloc.dispatch(LoginSubmitted(
           login: _emailController.text, password: _passwordController.text));
     }
   }
 
-  _registerPressed() {
+  void _registerPressed() {
     if (_regFormKey.currentState.validate()) {
-      String username = _regUsernameController.text;
-      String password = _regPasswordController.text;
-      String email = _regEmailController.text;
+      final username = _regUsernameController.text;
+      final password = _regPasswordController.text;
+      final email = _regEmailController.text;
 
       _loginBloc.dispatch(RegisterSubmitted(
           email: email, username: username, password: password));

@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:bloc/bloc.dart';
-import 'package:true_chat/api/api.dart';
+import 'package:true_chat/api/api.dart' as api;
 import 'package:true_chat/api/responses/response.dart';
-import 'package:true_chat/api/responses/user_response.dart';
 import 'package:true_chat/helpers/constants.dart';
-import 'package:true_chat/storage/storage_manager.dart';
 import '../bloc.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
@@ -18,7 +16,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   ) async* {
     if (event is LoginSubmitted) {
       try {
-        yield LoginStateLoading();
+        yield const LoginStateLoading();
         String email, username;
         if (emailRegExp.hasMatch(event.login)) {
           email = event.login;
@@ -28,17 +26,17 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         Response loginResponse;
         if (username == null) {
           loginResponse =
-              await Api.login(email: email, password: event.password);
+              await api.login(email: email, password: event.password);
         } else {
           loginResponse =
-              await Api.login(username: username, password: event.password);
+              await api.login(username: username, password: event.password);
         }
 
         if (loginResponse != null) {
           if (loginResponse.isError) {
             yield LoginStateError(message: loginResponse.message);
           } else {
-            await Api.getCurrentUser();
+            await api.getCurrentUser();
             yield LoginStateSuccess(response: loginResponse);
           }
         } else {
@@ -49,8 +47,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       }
     } else if (event is RegisterSubmitted) {
       try {
-        yield LoginStateLoading();
-        Response registerResponse = await Api.registration(
+        yield const LoginStateLoading();
+        final Response registerResponse = await api.registration(
             email: event.email,
             username: event.username,
             password: event.password);

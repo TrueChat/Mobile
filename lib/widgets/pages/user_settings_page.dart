@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:true_chat/api/api.dart';
+import 'package:true_chat/api/api.dart' as api;
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/user_response.dart';
 import 'package:true_chat/helpers/constants.dart';
@@ -17,7 +17,6 @@ class UserSettingsPage extends StatefulWidget {
 class _UserSettingsPageState extends State<UserSettingsPage> {
   LoadingScreen _loadingScreen;
 
-
   bool _isNamePressed = false;
   bool _isUsernamePressed = false;
   bool _isBioPressed = false;
@@ -25,19 +24,19 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
 
   BuildContext _scaffoldContext;
 
-  TextEditingController _nameController = TextEditingController();
-  TextEditingController _surNameController = TextEditingController();
-  TextEditingController _usernameController = TextEditingController();
-  TextEditingController _bioController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _surNameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
   String _currentName;
   String _currentSurname;
   String _currentUsername;
   String _currentBio;
 
-  FocusNode _focusNodeSurname = FocusNode();
-  FocusNode _focusNodeName = FocusNode();
+  final FocusNode _focusNodeSurname = FocusNode();
+  final FocusNode _focusNodeName = FocusNode();
 
-  InputDecoration _textFieldDecoration = InputDecoration(
+  final InputDecoration _textFieldDecoration = InputDecoration(
       enabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: accentColor, width: 2.0)),
       focusedBorder: UnderlineInputBorder(
@@ -96,7 +95,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                   .body1
                   .copyWith(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            SizedBox(
+            const SizedBox(
               height: 10.0,
             ),
             Text(
@@ -162,26 +161,27 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   void initState() {
     super.initState();
     _loadingScreen = LoadingScreen(
-      doWhenReload: _initUserData(),
+      doWhenReload: _initUserData,
     );
   }
 
-  _updateControllers() {
+  void _updateControllers() {
     _usernameController.text = _currentUsername;
     _nameController.text = _currentName;
     _surNameController.text = _currentSurname;
     _bioController.text = _currentBio;
   }
 
-  _initUserData() {
+  void _initUserData() {
     try {
       bool isThenReached = false;
-      Api.getCurrentUser().then((response) {
+      api.getCurrentUser().then((response) {
         isThenReached = true;
         if (response.isError) {
           _loadingScreen.state.noConnection(message: response.message);
         } else {
-          User user = (response as UserResponse).user;
+          final UserResponse userResponse = response;
+          final User user = userResponse.user;
           setState(() {
             _currentName = user.firstName == null || user.firstName == ''
                 ? yourName
@@ -225,14 +225,13 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Center(
-          child: Text(
-            "Settings",
-            style: TextStyle(
-                fontSize: 28.0,
+        centerTitle: true,
+        title: Text(
+          'Settings',
+          style: Theme.of(context).textTheme.title.copyWith(
                 color: accentColor,
-                fontWeight: FontWeight.bold),
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         backgroundColor: appBarColor,
       ),
@@ -272,12 +271,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                           ),
                           backgroundColor: primaryColor,
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 20.0,
                         ),
                         _nameWidget(),
                         if (!_isNamePressed)
-                          Expanded(
+                          const Expanded(
                             child: SizedBox(),
                           ),
                         IconButton(
@@ -300,7 +299,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10.0,
                 ),
                 Container(
@@ -314,8 +313,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
-                              Text("Username"),
-                              SizedBox(
+                              const Text('Username'),
+                              const SizedBox(
                                 height: 10.0,
                               ),
                               Row(
@@ -353,32 +352,32 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10.0,
                 ),
                 Container(
                   color: containerColor,
                   child: Padding(
-                    padding:
-                        EdgeInsets.all(10.0).copyWith(left: 20.0, bottom: 20.0),
+                    padding: const EdgeInsets.all(10.0)
+                        .copyWith(left: 20.0, bottom: 20.0),
                     child: Row(
                       children: <Widget>[
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              Text("Bio"),
-                              SizedBox(
+                              const Text('Bio'),
+                              const SizedBox(
                                 height: 10.0,
                               ),
                               Text(
-                                "You can write anything about you:",
+                                'You can write anything about you:',
                                 style: Theme.of(context)
                                     .textTheme
                                     .body1
                                     .copyWith(color: Colors.white),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 10.0,
                               ),
                               _bioWidget()
@@ -405,7 +404,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 80.0,
                 ),
               ],
@@ -434,7 +433,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     );
   }
 
-  _submitPressed() {
+  void _submitPressed() {
     try {
       setState(() {
         _isLoading = true;
@@ -452,7 +451,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         surname = _currentSurname;
       }
       bool isThenReached = false;
-      Api.changeUserData(name: name, surname: surname, bio: bio,username: _currentUsername)
+      api
+          .changeUserData(
+              name: name,
+              surname: surname,
+              bio: bio,
+              username: _currentUsername)
           .then((response) {
         isThenReached = true;
         if (response.isError) {

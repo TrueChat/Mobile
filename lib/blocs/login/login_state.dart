@@ -11,30 +11,30 @@ class LoginStateInitial extends LoginState {
 }
 
 class LoginStateLoading extends LoginState {
-  LoginStateLoading();
+  const LoginStateLoading();
 
   @override
   List<Object> get props => null;
 }
 
 class LoginStateSuccess extends LoginState {
-  final Response response;
+  const LoginStateSuccess({this.response});
 
-  LoginStateSuccess({this.response});
+  final Response response;
 
   @override
   List<Object> get props => [response];
 }
 
 class RegisterStateSuccess extends LoginState {
-@override
+  @override
   List<Object> get props => null;
 }
 
 class LoginStateError extends LoginState {
-  final String message;
+  const LoginStateError({this.message});
 
-  LoginStateError({this.message});
+  final String message;
 
   @override
   List<Object> get props => [message];

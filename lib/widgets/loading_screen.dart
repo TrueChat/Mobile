@@ -3,34 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:true_chat/helpers/constants.dart';
 
 class LoadingScreen extends StatefulWidget {
-  Function _doWhenReload;
-  _LoadingScreenState _loadingScreenState;
+  const LoadingScreen({this.doWhenReload});
 
-  _LoadingScreenState get state => _loadingScreenState;
+  final Function doWhenReload;
+  _LoadingScreenState get state => _LoadingScreenState(doWhenReload: doWhenReload);
 
-  LoadingScreen({doWhenReload}) {
-    _doWhenReload = doWhenReload;
-  }
 
   @override
-  State<StatefulWidget> createState() {
-    _loadingScreenState = _doWhenReload == null
-        ? _LoadingScreenState()
-        : _LoadingScreenState(doWhenReload: _doWhenReload);
-    return _loadingScreenState;
-  }
+  State<StatefulWidget> createState() => state;
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
+  _LoadingScreenState({Function doWhenReload}) {
+    _doWhenReload = doWhenReload;
+  }
+
   bool _isConnected = true;
 
   String _noConnectionMessage = noConnectionMessage;
 
   Function _doWhenReload;
-
-  _LoadingScreenState({Function doWhenReload}) {
-    _doWhenReload = doWhenReload;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,17 +32,17 @@ class _LoadingScreenState extends State<LoadingScreen> {
     );
   }
 
-  Widget _loading = Center(
+  final Widget _loading = Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(accentColor),
         ),
-        SizedBox(
+        const SizedBox(
           height: 20.0,
         ),
-        Text("Loading")
+        const Text('Loading')
       ],
     ),
   );
@@ -62,19 +54,19 @@ class _LoadingScreenState extends State<LoadingScreen> {
             Row(
               children: <Widget>[
                 Icon(Icons.error),
-                SizedBox(
+                const SizedBox(
                   width: 10.0,
                 ),
                 Text(_noConnectionMessage),
               ],
               mainAxisAlignment: MainAxisAlignment.center,
             ),
-            SizedBox(
+            const SizedBox(
               height: 10.0,
             ),
             InkWell(
               child: Text(
-                "Reload",
+                'Reload',
                 style: TextStyle(color: Colors.blue),
               ),
               onTap: () => _reloadPressed(),
@@ -83,14 +75,14 @@ class _LoadingScreenState extends State<LoadingScreen> {
         ),
       );
 
-  noConnection({String message}) {
+  void noConnection({String message}) {
     setState(() {
       _noConnectionMessage = message ?? _noConnectionMessage;
       _isConnected = false;
     });
   }
 
-  _reloadPressed() {
+  void _reloadPressed() {
     setState(() {
       _isConnected = true;
       if (_doWhenReload != null) {

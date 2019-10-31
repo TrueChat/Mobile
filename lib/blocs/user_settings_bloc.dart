@@ -2,7 +2,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:true_chat/blocs/bloc_base.dart';
 
 class UserSettingsBloc extends BlocBase {
-  BehaviorSubject<bool> _isLoading = BehaviorSubject<bool>.seeded(true);
+  final BehaviorSubject<bool> _isLoading = BehaviorSubject<bool>.seeded(true);
 
   Observable<bool> get loadingStream => _isLoading.stream;
 

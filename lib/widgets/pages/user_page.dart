@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:true_chat/api/api.dart';
 import 'package:true_chat/helpers/constants.dart';
-import 'package:true_chat/widgets/pages/login_page.dart';
 import 'package:true_chat/widgets/pages/user_settings_page.dart';
 
 class UserPage extends StatefulWidget {
@@ -16,7 +14,7 @@ class _UserPageState extends State<UserPage> {
       appBar: AppBar(
         title: Center(
           child: Text(
-            "User",
+            'User',
             style: TextStyle(
                 fontSize: 28.0,
                 color: accentColor,
@@ -36,21 +34,13 @@ class _UserPageState extends State<UserPage> {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           RaisedButton(
-            child: Text("Settings"),
+            child: const Text('Settings'),
             onPressed: () {
               goToPage(context, UserSettingsPage());
             },
           ),
-          SizedBox(height: 10.0,),
-          RaisedButton(
-            child: Text("Logout"),
-            onPressed: () async{
-              Api.logout().whenComplete((){
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => LogInPage()),
-                        (Route<dynamic> route) => false);
-              });
-            },
+          const SizedBox(
+            height: 10.0,
           ),
         ],
       ),

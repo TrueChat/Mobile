@@ -20,6 +20,6 @@ class CustomIcons {
 
   static const _kFontFam = 'CustomIcons';
 
-  static const IconData user = const IconData(0xe803, fontFamily: _kFontFam);
-  static const IconData log_in = const IconData(0xe804, fontFamily: _kFontFam);
+  static const IconData user = IconData(0xe803, fontFamily: _kFontFam);
+  static const IconData log_in = IconData(0xe804, fontFamily: _kFontFam);
 }

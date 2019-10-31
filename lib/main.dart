@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:true_chat/helpers/constants.dart';
-import 'package:true_chat/storage/storage_manager.dart';
+import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
 import 'package:true_chat/widgets/pages/home_page.dart';
 import 'package:true_chat/widgets/pages/login_page.dart';
 
@@ -15,10 +15,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: FutureBuilder(
-        future: StorageManager.isLoggedIn(),
+        future: storage_manager.isLoggedIn(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            bool isLoggedIn = snapshot.data;
+            final bool isLoggedIn = snapshot.data;
             return isLoggedIn ? HomePage() : LogInPage();
           } else {
             return Container();
@@ -44,8 +44,8 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: [
-        Locale('en')
+      supportedLocales: const <Locale>[
+        Locale('en'),
       ],
     );
   }

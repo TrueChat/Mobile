@@ -32,8 +32,8 @@ class EnsureVisibleWhenFocused extends StatefulWidget {
     Key key,
     @required this.child,
     @required this.focusNode,
-    this.curve: Curves.ease,
-    this.duration: const Duration(milliseconds: 100),
+    this.curve = Curves.ease,
+    this.duration = const Duration(milliseconds: 100),
   }) : super(key: key);
 
   /// The node we will monitor to determine if the child is focused
@@ -54,7 +54,7 @@ class EnsureVisibleWhenFocused extends StatefulWidget {
 
   @override
   _EnsureVisibleWhenFocusedState createState() =>
-      new _EnsureVisibleWhenFocusedState();
+      _EnsureVisibleWhenFocusedState();
 }
 
 ///
@@ -97,21 +97,21 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
   ///
   /// This method was suggested by Peter Yuen (see discussion).
   ///
-  Future<Null> _keyboardToggled() async {
+  Future<void> _keyboardToggled() async {
     if (mounted) {
-      EdgeInsets edgeInsets = MediaQuery.of(context).viewInsets;
+      final EdgeInsets edgeInsets = MediaQuery.of(context).viewInsets;
       while (mounted && MediaQuery.of(context).viewInsets == edgeInsets) {
-        await new Future.delayed(const Duration(milliseconds: 10));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
       }
     }
 
     return;
   }
 
-  Future<Null> _ensureVisible() async {
+  Future<void> _ensureVisible() async {
     // Wait for the keyboard to come into view
     await Future.any([
-      new Future.delayed(const Duration(milliseconds: 300)),
+      Future<void>.delayed(const Duration(milliseconds: 300)),
       _keyboardToggled()
     ]);
 
@@ -130,11 +130,11 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
     }
 
     // Get the Scrollable state (in order to retrieve its offset)
-    ScrollableState scrollableState = Scrollable.of(context);
+    final ScrollableState scrollableState = Scrollable.of(context);
     assert(scrollableState != null);
 
     // Get its offset
-    ScrollPosition position = scrollableState.position;
+    final ScrollPosition position = scrollableState.position;
     double alignment;
 
     if (position.pixels > viewport.getOffsetToReveal(object, 0.0).offset) {
