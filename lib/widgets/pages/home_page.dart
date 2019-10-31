@@ -68,6 +68,12 @@ class _HomePageState extends State<HomePage> {
             ],
             mainAxisAlignment: MainAxisAlignment.center,
           ),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: _searchPressed,
+            )
+          ],
           backgroundColor: appBarColor,
         ),
         body: Builder(
@@ -82,6 +88,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _searchPressed() {}
+
   Future<void> _initUserData() async {
     final User user = await storage_manager.getUser();
     setState(() {
@@ -93,10 +101,66 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _body() {
-    return Center(
-      child: Text(
-        'Hello TrueChat!',
-        style: Theme.of(context).textTheme.headline,
+    return ListView.separated(
+      separatorBuilder: (context, index) => const SizedBox(
+        height: 8.0,
+      ),
+      itemBuilder: (context, index) => _chatItem(index),
+      itemCount: 10,
+      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+    );
+  }
+
+  Widget _chatItem(int index) {
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      color: containerColor,
+      child: Row(
+        children: <Widget>[
+          CircularProfileAvatar(
+            'NS',
+            radius: 40.0,
+            initialsText: Text(
+              'NS',
+              style: TextStyle(fontSize: 30, color: Colors.white),
+            ),
+            backgroundColor: containerColor,
+          ),
+          const SizedBox(
+            width: 10.0,
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Text(
+                      'Name Surname',
+                      style: Theme.of(context).textTheme.body1.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                    const Expanded(child: SizedBox()),
+                    Text(
+                      '20:24',
+                      style: Theme.of(context)
+                          .textTheme
+                          .body1
+                          .copyWith(fontSize: 16.0),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10.0,),
+                Text(
+                  'sajdksakdkasdkaksdkaasdsadsadsadsaddassdkdj',
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.body1,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -168,8 +232,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              onTap: (){
-                goToPage(context,CreateGroupPage());
+              onTap: () {
+                goToPage(context, CreateGroupPage());
               },
             ),
             Expanded(

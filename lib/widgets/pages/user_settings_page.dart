@@ -163,6 +163,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     _loadingScreen = LoadingScreen(
       doWhenReload: _initUserData,
     );
+    _initUserData();
   }
 
   void _updateControllers() {
