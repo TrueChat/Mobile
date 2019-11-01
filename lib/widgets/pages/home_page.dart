@@ -3,10 +3,12 @@ import 'dart:io';
 
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/user.dart';
-import 'package:true_chat/helpers/constants.dart';
+import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
 import 'package:true_chat/widgets/pages/create_group_page.dart';
+import 'package:true_chat/widgets/pages/edit_group_page.dart';
 import 'package:true_chat/widgets/pages/login_page.dart';
 import 'package:true_chat/widgets/pages/user_page.dart';
 import 'package:true_chat/api/api.dart' as api;
@@ -24,10 +26,21 @@ class _HomePageState extends State<HomePage> {
   String _firstName = 'N';
   String _lastName = 'S';
 
+  final List<Chat> _chats = [];
+
   @override
   void initState() {
-    _initUserData();
     super.initState();
+    _initUserData();
+    for (int i = 0; i < 10; ++i) {
+      _chats.add(
+        Chat(
+          id: i,
+          name: 'Chat #$i',
+          description: 'Chat with number $i',
+        ),
+      );
+    }
   }
 
   String _initialText() => '${_firstName[0]}${_lastName[0]}'.toUpperCase();
@@ -42,7 +55,7 @@ class _HomePageState extends State<HomePage> {
         }
         _isBackTappedTwice = true;
         const duration = Duration(seconds: 2);
-        snackBar(
+        constants.snackBar(
             _scaffoldContext, 'Press again to exit', Colors.green, duration);
         Timer(duration, () {
           _isBackTappedTwice = false;
@@ -54,7 +67,7 @@ class _HomePageState extends State<HomePage> {
           title: Row(
             children: <Widget>[
               Image.asset(
-                logoAsset,
+                constants.logoAsset,
                 height: 30.0,
                 width: 30.0,
               ),
@@ -63,7 +76,7 @@ class _HomePageState extends State<HomePage> {
               ),
               Text(
                 'True chat',
-                style: TextStyle(fontSize: 28.0, color: accentColor),
+                style: TextStyle(fontSize: 28.0, color: constants.accentColor),
               ),
             ],
             mainAxisAlignment: MainAxisAlignment.center,
@@ -74,7 +87,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: _searchPressed,
             )
           ],
-          backgroundColor: appBarColor,
+          backgroundColor: constants.appBarColor,
         ),
         body: Builder(
           builder: (buildContext) {
@@ -106,73 +119,86 @@ class _HomePageState extends State<HomePage> {
         height: 8.0,
       ),
       itemBuilder: (context, index) => _chatItem(index),
-      itemCount: 10,
+      itemCount: _chats.length,
       padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
     );
   }
 
   Widget _chatItem(int index) {
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      color: containerColor,
-      child: Row(
-        children: <Widget>[
-          CircularProfileAvatar(
-            'NS',
-            radius: 40.0,
-            initialsText: Text(
+    final chat = _chats[index];
+    return GestureDetector(
+      onTap: () {
+        constants.goToPage(
+            context,
+            EditGroupPage(
+              chat: chat,
+            ));
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8.0),
+        color: constants.containerColor,
+        child: Row(
+          children: <Widget>[
+            CircularProfileAvatar(
               'NS',
-              style: TextStyle(fontSize: 30, color: Colors.white),
+              radius: 40.0,
+              initialsText: Text(
+                'NS',
+                style: TextStyle(fontSize: 30, color: Colors.white),
+              ),
+              backgroundColor: constants.appBarColor,
+              borderColor: constants.appBarColor,
             ),
-            backgroundColor: containerColor,
-          ),
-          const SizedBox(
-            width: 10.0,
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Text(
-                      'Name Surname',
-                      style: Theme.of(context).textTheme.body1.copyWith(
-                        color: Colors.white,
+            const SizedBox(
+              width: 10.0,
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        chat.name,
+                        style: Theme.of(context).textTheme.body1.copyWith(
+                              color: Colors.white,
+                            ),
                       ),
-                    ),
-                    const Expanded(child: SizedBox()),
-                    Text(
-                      '20:24',
-                      style: Theme.of(context)
-                          .textTheme
-                          .body1
-                          .copyWith(fontSize: 16.0),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10.0,),
-                Text(
-                  'sajdksakdkasdkaksdkaasdsadsadsadsaddassdkdj',
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.body1,
-                ),
-              ],
+                      const Expanded(child: SizedBox()),
+                      Text(
+                        '20:24',
+                        style: Theme.of(context)
+                            .textTheme
+                            .body1
+                            .copyWith(fontSize: 16.0),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                  Text(
+                    'sajdksakdkasdkaksdkaasdsadsadsadsaddassdkdj',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _leftSideDrawer() {
     return Theme(
-      data: Theme.of(context).copyWith(canvasColor: backgroundColor),
+      data: Theme.of(context).copyWith(canvasColor: constants.backgroundColor),
       child: Drawer(
         child: Column(
           children: <Widget>[
             DrawerHeader(
-              decoration: BoxDecoration(color: drawerHeaderColor),
+              decoration: BoxDecoration(color: constants.drawerHeaderColor),
               child: GestureDetector(
                 child: Row(
                   children: <Widget>[
@@ -183,7 +209,8 @@ class _HomePageState extends State<HomePage> {
                         _initialText(),
                         style: TextStyle(fontSize: 40, color: Colors.white),
                       ),
-                      backgroundColor: containerColor,
+                      backgroundColor: constants.containerColor,
+                      borderColor: constants.containerColor,
                     ),
                     const SizedBox(
                       width: 20.0,
@@ -211,7 +238,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 onTap: () {
-                  goToPage(context, UserPage());
+                  constants.goToPage(context, UserPage());
                 },
               ),
             ),
@@ -220,11 +247,11 @@ class _HomePageState extends State<HomePage> {
             ),
             GestureDetector(
               child: Container(
-                color: containerColor,
+                color: constants.containerColor,
                 child: ListTile(
                   leading: Icon(
                     Icons.add,
-                    color: fontColor,
+                    color: constants.fontColor,
                   ),
                   title: Text(
                     'Create group chat',
@@ -233,7 +260,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               onTap: () {
-                goToPage(context, CreateGroupPage());
+                constants.goToPage(context, CreateGroupPage());
               },
             ),
             Expanded(
@@ -241,11 +268,11 @@ class _HomePageState extends State<HomePage> {
                 alignment: Alignment.bottomCenter,
                 child: GestureDetector(
                   child: Container(
-                    color: containerColor,
+                    color: constants.containerColor,
                     child: ListTile(
                       leading: Icon(
                         Icons.exit_to_app,
-                        color: fontColor,
+                        color: constants.fontColor,
                       ),
                       title: Text(
                         'Logout',
@@ -269,6 +296,8 @@ class _HomePageState extends State<HomePage> {
         Navigator.of(context).pushAndRemoveUntil<void>(
             MaterialPageRoute(builder: (context) => LogInPage()),
             (Route<dynamic> route) => false);
+      } else {
+        constants.snackBar(_scaffoldContext, response.message, Colors.red);
       }
     });
   }

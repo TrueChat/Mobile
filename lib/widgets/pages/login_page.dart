@@ -104,7 +104,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                     'Werify your email to log in',
                     textAlign: TextAlign.center,
                   ),
-                  duration: Duration(minutes: 5),
+                  duration: const Duration(minutes: 5),
                   action: SnackBarAction(
                     label: 'Ok',
                     onPressed: () {
@@ -236,7 +236,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
   void _menuPressed(int index, LoginTab tab) {
     _loginPageControllerBloc.dispatch(PageChange(tab: tab));
     _controller.animateToPage(index,
-        duration: Duration(milliseconds: 500), curve: Curves.ease);
+        duration: const Duration(milliseconds: 500), curve: Curves.ease);
   }
 
   InputDecoration _textFieldDecoration(String labelText) => InputDecoration(

@@ -3,30 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:meta/meta.dart';
 
-///
-/// Helper class that ensures a Widget is visible when it has the focus
-/// For example, for a TextFormField when the keyboard is displayed
-///
-/// How to use it:
-///
-/// In the class that implements the Form,
-///   Instantiate a FocusNode
-///   FocusNode _focusNode = new FocusNode();
-///
-/// In the build(BuildContext context), wrap the TextFormField as follows:
-///
-///   new EnsureVisibleWhenFocused(
-///     focusNode: _focusNode,
-///     child: new TextFormField(
-///       ...
-///       focusNode: _focusNode,
-///     ),
-///   ),
-///
-/// Initial source code written by Collin Jackson.
-/// Extended (see highlighting) to cover the case when the keyboard is dismissed and the
-/// user clicks the TextFormField/TextField which still has the focus.
-///
+
 class EnsureVisibleWhenFocused extends StatefulWidget {
   const EnsureVisibleWhenFocused({
     Key key,

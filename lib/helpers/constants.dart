@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 //Strings
@@ -7,10 +9,13 @@ const loginHint = 'Login';
 const passwordHint = 'Password';
 const password2Hint = 'Confirm password';
 const smthWentWrong = 'Something went wrong';
-const noConnectionMessage = 'No connection';
+const noConnectionMessage = 'No internet connection';
+const noConnectionToServer = 'No connection to server';
 const yourName = 'Name';
 const yourSurName = 'Surname';
 const literallyAnything = 'Literally anything.';
+const createGroupPageTitle = 'Create Group';
+const editGroupPageTitle = 'Group info';
 
 //assets
 const logoAsset = 'assets/images/logo_icon.png';
@@ -61,3 +66,15 @@ void snackBar(BuildContext context, String message,
 
 void goToPage(BuildContext context, Widget page) => Navigator.push<void>(
     context, MaterialPageRoute(builder: (context) => page));
+
+Future<bool> checkConnection({String connectionUrl = 'example.com'}) async{
+  try {
+    final result = await InternetAddress.lookup(connectionUrl);
+    if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+      return true;
+    }
+    return false;
+  } on SocketException catch (_) {
+    return false;
+  }
+}

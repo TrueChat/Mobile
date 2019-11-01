@@ -173,13 +173,14 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     _bioController.text = _currentBio;
   }
 
-  void _initUserData() {
-    try {
-      bool isThenReached = false;
-      api.getCurrentUser().then((response) {
-        isThenReached = true;
+  Future<void> _initUserData() async {
+    bool connection = await checkConnection();
+    if(connection){
+      connection = await checkConnection(connectionUrl: 'true-chat.herokuapp.com');
+      if(connection){
+        final response = await api.getCurrentUser();
         if (response.isError) {
-          _loadingScreen.state.noConnection(message: response.message);
+          _loadingScreen.noConnection(message: response.message);
         } else {
           final UserResponse userResponse = response;
           final User user = userResponse.user;
@@ -198,13 +199,11 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
             _isLoading = false;
           });
         }
-      }).whenComplete(() {
-        if (!isThenReached) {
-          _loadingScreen.state.noConnection(message: noConnectionMessage);
-        }
-      });
-    } on SocketException {
-      _loadingScreen.state.noConnection(message: noConnectionMessage);
+      }else{
+        _loadingScreen.noConnection(message: noConnectionToServer);
+      }
+    }else{
+      _loadingScreen.noConnection(message: noConnectionMessage);
     }
   }
 
@@ -470,11 +469,11 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         }
       }).whenComplete(() {
         if (!isThenReached) {
-          _loadingScreen.state.noConnection(message: noConnectionMessage);
+          _loadingScreen.noConnection(message: noConnectionMessage);
         }
       });
     } on SocketException {
-      _loadingScreen.state.noConnection(message: noConnectionMessage);
+      _loadingScreen.noConnection(message: noConnectionMessage);
     }
   }
 }

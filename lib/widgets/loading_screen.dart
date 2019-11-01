@@ -3,26 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:true_chat/helpers/constants.dart';
 
 class LoadingScreen extends StatefulWidget {
-  const LoadingScreen({this.doWhenReload});
+  LoadingScreen({this.doWhenReload}){
+    _state = _LoadingScreenState();
+  }
 
+  _LoadingScreenState _state;
   final Function doWhenReload;
-  _LoadingScreenState get state => _LoadingScreenState(doWhenReload: doWhenReload);
 
+  void noConnection({String message}){
+    _state.noConnection(message: message);
+  }
 
   @override
-  State<StatefulWidget> createState() => state;
+  State<StatefulWidget> createState() => _state;
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
-  _LoadingScreenState({Function doWhenReload}) {
-    _doWhenReload = doWhenReload;
-  }
+  _LoadingScreenState();
 
   bool _isConnected = true;
 
   String _noConnectionMessage = noConnectionMessage;
-
-  Function _doWhenReload;
 
   @override
   Widget build(BuildContext context) {
@@ -85,8 +86,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
   void _reloadPressed() {
     setState(() {
       _isConnected = true;
-      if (_doWhenReload != null) {
-        _doWhenReload();
+      if (widget.doWhenReload != null) {
+        widget.doWhenReload();
       }
     });
   }

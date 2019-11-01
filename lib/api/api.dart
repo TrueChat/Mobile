@@ -10,7 +10,7 @@ import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
 
 import 'models/user.dart';
 
-const _baseUrl = 'https://true-chat.herokuapp.com/';
+const baseUrl = 'https://true-chat.herokuapp.com/';
 const _registrationEndpoint = 'rest-auth/registration/';
 const _loginEndpoint = 'rest-auth/login/';
 const _profileEndpoint = 'profile';
@@ -18,7 +18,7 @@ const _logoutEndpoint = 'rest-auth/logout/';
 
 Map<String, String> _postHeaders = {
   'accept': 'application/json',
-  'Content-Type': 'application/json'
+  'Content-Type': 'application/json; charset=utf-8',
 };
 
 Map<String, String> _authHeader(String accessToken) =>
@@ -98,17 +98,20 @@ Future<Response> getCurrentUser() async {
 Future<Response> logout() async {
   final accessToken = await storage_manager.getAccessToken();
 
-  final response = await http.post(callUrl(_logoutEndpoint),
-      headers: _authHeader(accessToken));
-
-  if (response.statusCode >= 500) {
+  try{
+    final response = await http.post(callUrl(_logoutEndpoint),
+        headers: _authHeader(accessToken));
+    if (response.statusCode >= 500) {
+      return Response(true, smthWentWrong);
+    }
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      await storage_manager.clear();
+      return Response(false, 'Logout successfully');
+    }
     return Response(true, smthWentWrong);
+  } catch(_){
+    return Response(true, noConnectionMessage);
   }
-  if (response.statusCode >= 200 && response.statusCode < 300) {
-    await storage_manager.clear();
-    return Response(false, 'Logout successfully');
-  }
-  return Response(true, smthWentWrong);
 }
 
 Future<Response> changeUserData(
@@ -153,9 +156,11 @@ Future<Response> changeUserData(
   return Response(true, message);
 }
 
+
+
 //Helpers
 String callUrl(String endpoint, {Map<String, String> query}) {
-  String res = _baseUrl + endpoint;
+  String res = baseUrl + endpoint;
   if (query != null) {
     res += '?';
     query.forEach((key, value) {
@@ -166,6 +171,11 @@ String callUrl(String endpoint, {Map<String, String> query}) {
     res.substring(0, res.length - 1);
   }
   return res;
+}
+
+String utf8convert(String text) {
+  final bytes = text.toString().codeUnits;
+  return utf8.decode(bytes);
 }
 
 //Map<String, dynamic> _parseJwt(String token) {
