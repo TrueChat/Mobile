@@ -1,7 +1,11 @@
+import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/helpers/constants.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
+import 'package:true_chat/widgets/pages/add_members_page.dart';
+import 'package:true_chat/widgets/custom_popup_menu.dart' as custom_popup;
+import 'package:true_chat/widgets/pages/user_page.dart';
 
 class EditGroupPage extends StatefulWidget {
   const EditGroupPage({@required this.chat}) : assert(chat != null);
@@ -13,8 +17,15 @@ class EditGroupPage extends StatefulWidget {
 }
 
 class _EditGroupPageState extends State<EditGroupPage> {
-  String _newChatName;
-  String _newChatDescription;
+  final _chatNameController = TextEditingController();
+  final _chatDescriptionController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _chatNameController.text = widget.chat.name;
+    _chatDescriptionController.text = widget.chat.description;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +46,268 @@ class _EditGroupPageState extends State<EditGroupPage> {
     );
   }
 
+  final InputDecoration _textFieldDecoration = InputDecoration(
+      enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: accentColor, width: 2.0)),
+      focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: accentColor, width: 2.0)));
+
   Widget _body() {
-    return Container();
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10.0),
+        child: Column(
+          children: <Widget>[
+            Container(
+              color: containerColor,
+              child: Padding(
+                padding: const EdgeInsets.all(10.0).copyWith(left: 20.0),
+                child: Row(
+                  children: <Widget>[
+                    CircularProfileAvatar(
+                      '',
+                      radius: 40.0,
+                      initialsText: Text(
+                        'NC',
+                        style: TextStyle(fontSize: 40, color: Colors.white),
+                      ),
+                      backgroundColor: constants.appBarColor,
+                      borderColor: constants.appBarColor,
+                    ),
+                    const SizedBox(
+                      width: 20.0,
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _chatNameController,
+                        style: Theme.of(context)
+                            .textTheme
+                            .body1
+                            .copyWith(color: Colors.white),
+                        decoration: _textFieldDecoration,
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 8.0,
+            ),
+            Container(
+              color: containerColor,
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(
+                    'Description',
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                  TextField(
+                    controller: _chatDescriptionController,
+                    style: Theme.of(context).textTheme.body1.copyWith(
+                          color: Colors.white,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(
+              height: 8.0,
+            ),
+            Container(
+              color: containerColor,
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      '${widget.chat.users != null ? widget.chat.users.length : 0} members',
+                      style: Theme.of(context).textTheme.body1,
+                    ),
+                  ),
+                  GestureDetector(
+                    child: Text(
+                      'Add',
+                      style: Theme.of(context).textTheme.body1,
+                    ),
+                    onTap: () => constants.goToPage(
+                        context,
+                        AddMembersPage(
+                          chatId: widget.chat.id,
+                        )),
+                  )
+                ],
+              ),
+            ),
+            const SizedBox(
+              height: 8.0,
+            ),
+            ListView.builder(
+              itemBuilder: (context, index) {
+                return _memberItem(index);
+              },
+              itemCount: widget.chat.users.length,
+              shrinkWrap: true,
+              physics: const ClampingScrollPhysics(),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _memberItem(int index) {
+    final user = widget.chat.users[index];
+    final initText = '${user.firstName[0]}${user.lastName[0]}'.toString();
+
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      color: containerColor,
+      child: Row(
+        children: <Widget>[
+          CircularProfileAvatar(
+            initText,
+            radius: 30.0,
+            initialsText: Text(
+              initText,
+              style: TextStyle(fontSize: 30, color: Colors.white),
+            ),
+            backgroundColor: appBarColor,
+            borderColor: appBarColor,
+          ),
+          const SizedBox(
+            width: 10.0,
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  '${user.firstName} ${user.lastName}',
+                  style: Theme.of(context).textTheme.body1.copyWith(
+                        color: Colors.white,
+                      ),
+                ),
+                const SizedBox(
+                  height: 10.0,
+                ),
+                Text(
+                  '@${user.username}',
+                  style: Theme.of(context).textTheme.body1,
+                ),
+              ],
+            ),
+          ),
+          _popupMenuButton(index),
+        ],
+      ),
+    );
+  }
+
+  Widget _popupMenuButton(int index) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        cardColor: constants.containerColor,
+      ),
+      child: custom_popup.PopupMenuButton<int>(
+        icon: Icon(
+          Icons.more_vert,
+          color: constants.fontColor,
+        ),
+        itemBuilder: (context) => <custom_popup.PopupMenuEntry<int>>[
+          custom_popup.PopupMenuItem(
+            value: 0,
+            child: Center(
+              child: Text(
+                'Profile',
+                style: Theme.of(context).textTheme.body1,
+              ),
+            ),
+          ),
+          custom_popup.PopupMenuItem(
+            value: 1,
+            child: Center(
+              child: Text(
+                'Kick',
+                style: Theme.of(context).textTheme.body1,
+              ),
+            ),
+          ),
+          custom_popup.PopupMenuItem(
+            value: 2,
+            child: Center(
+              child: Text(
+                'Ban',
+                style: Theme.of(context).textTheme.body1,
+              ),
+            ),
+          ),
+        ],
+        padding: EdgeInsets.zero,
+        onSelected: (value) {
+          switch (value) {
+            case 0:
+              constants.goToPage(context, const UserPage());
+              break;
+
+            case 1:
+              showDialog<void>(context: context,builder: (context){
+                return areYouSureDialog((){});
+              });
+              break;
+
+            case 2:
+              showDialog<void>(context: context,builder: (context){
+                return areYouSureDialog((){});
+              });
+              break;
+          }
+        },
+      ),
+    );
+  }
+
+  AlertDialog areYouSureDialog(Function confirmFunction) {
+    return AlertDialog(
+      titlePadding: EdgeInsets.zero,
+      contentPadding: EdgeInsets.zero,
+      backgroundColor: constants.backgroundColor,
+      title: Container(
+        color: constants.containerColor,
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          'Are you sure?',
+          style: Theme.of(context).textTheme.title,
+          textAlign: TextAlign.center,
+        ),
+      ),
+      content: Padding(
+        padding: const EdgeInsets.only(left: 8.0,right: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            Expanded(
+              child: RaisedButton(
+                color: constants.containerColor,
+                child: Text('Yes',style: Theme.of(context).textTheme.body1,),
+                onPressed: confirmFunction,
+              ),
+            ),
+            const SizedBox(width: 8.0,),
+            Expanded(
+              child: RaisedButton(
+                color: constants.containerColor,
+                child: Text('No',style: Theme.of(context).textTheme.body1,),
+                onPressed: (){
+                  Navigator.of(context).pop();
+                },
+              ),
+            )
+          ],
+        ),
+      ),
+    );
   }
 }

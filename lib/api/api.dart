@@ -85,7 +85,7 @@ Future<Response> getCurrentUser() async {
   if (response.statusCode >= 500) {
     return Response(true, smthWentWrong);
   }
-  final Map<String, dynamic> res = json.decode(response.body);
+  final Map<String, dynamic> res = json.decode(utf8Decode(response));
   if (response.statusCode >= 200 && response.statusCode < 300) {
     final user = User.fromJson(res);
     await storage_manager.saveUser(user: user);
@@ -173,10 +173,7 @@ String callUrl(String endpoint, {Map<String, String> query}) {
   return res;
 }
 
-String utf8convert(String text) {
-  final bytes = text.toString().codeUnits;
-  return utf8.decode(bytes);
-}
+String utf8Decode(http.Response response) => utf8.decode(response.bodyBytes);
 
 //Map<String, dynamic> _parseJwt(String token) {
 //  final parts = token.split('.');

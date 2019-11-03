@@ -16,6 +16,7 @@ const yourSurName = 'Surname';
 const literallyAnything = 'Literally anything.';
 const createGroupPageTitle = 'Create Group';
 const editGroupPageTitle = 'Group info';
+const addMembersPageTitle = 'Add members';
 
 //assets
 const logoAsset = 'assets/images/logo_icon.png';

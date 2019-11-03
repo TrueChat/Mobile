@@ -1,29 +1,57 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:true_chat/helpers/constants.dart';
 
-class LoadingScreen extends StatefulWidget {
-  LoadingScreen({this.doWhenReload}){
-    _state = _LoadingScreenState();
-  }
+class NoConnectionEvent {
+  NoConnectionEvent({this.message});
 
-  _LoadingScreenState _state;
+  final String message;
+}
+
+const _noConnectionMessage = 'No internet connection';
+
+class LoadingScreen extends StatefulWidget {
+  LoadingScreen(
+      {this.doWhenReload});
+
   final Function doWhenReload;
 
-  void noConnection({String message}){
-    _state.noConnection(message: message);
+  final _controller = StreamController<NoConnectionEvent>.broadcast();
+
+  void noConnection({String message}) {
+    _controller.sink.add(NoConnectionEvent(message: message));
   }
 
   @override
-  State<StatefulWidget> createState() => _state;
+  State<StatefulWidget> createState() {
+    return _LoadingScreenState(_controller.stream);
+  }
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
-  _LoadingScreenState();
+  _LoadingScreenState(this._stream) {
+    _stream.listen((event) {
+      if(mounted){
+        noConnection(message: event.message);
+      }
+    });
+  }
+
+
+  @override
+  void dispose() {
+    if(!mounted){
+      widget._controller.close();
+    }
+    super.dispose();
+  }
+
+  final Stream<NoConnectionEvent> _stream;
 
   bool _isConnected = true;
 
-  String _noConnectionMessage = noConnectionMessage;
+  String _noConnectionText = _noConnectionMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +86,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
                 const SizedBox(
                   width: 10.0,
                 ),
-                Text(_noConnectionMessage),
+                Text(_noConnectionText),
               ],
               mainAxisAlignment: MainAxisAlignment.center,
             ),
@@ -78,7 +106,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   void noConnection({String message}) {
     setState(() {
-      _noConnectionMessage = message ?? _noConnectionMessage;
+      _noConnectionText = message ?? _noConnectionText;
       _isConnected = false;
     });
   }

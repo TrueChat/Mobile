@@ -33,11 +33,22 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _initUserData();
     for (int i = 0; i < 10; ++i) {
+      final List<User> users = [];
+      for (int j = 0; j < 5; j++) {
+        users.add(
+          User(
+            firstName: 'firstname $j',
+            lastName: 'lastname $j',
+            username: 'username $j',
+          ),
+        );
+      }
       _chats.add(
         Chat(
           id: i,
           name: 'Chat #$i',
           description: 'Chat with number $i',
+          users: users,
         ),
       );
     }
