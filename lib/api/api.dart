@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:true_chat/api/responses/chats_response.dart';
 import 'package:true_chat/api/responses/login_response.dart';
 import 'package:true_chat/api/responses/response.dart';
 import 'package:true_chat/api/responses/user_response.dart';
@@ -10,11 +11,18 @@ import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
 
 import 'models/user.dart';
 
+class ApiException implements Exception {
+  const ApiException([this.message]);
+
+  final String message;
+}
+
 const baseUrl = 'https://true-chat.herokuapp.com/';
 const _registrationEndpoint = 'rest-auth/registration/';
 const _loginEndpoint = 'rest-auth/login/';
 const _profileEndpoint = 'profile';
 const _logoutEndpoint = 'rest-auth/logout/';
+const _chatsEndpoint = 'chats/';
 
 Map<String, String> _postHeaders = {
   'accept': 'application/json',
@@ -95,10 +103,34 @@ Future<Response> getCurrentUser() async {
   return Response(true, message);
 }
 
+Future<ChatsResponse> fetchChats(int page) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final response = await http.get(
+      callUrl(_chatsEndpoint, query: <String, String>{
+        'page': page.toString(),
+      }),
+      headers: _authHeader(accessToken),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> chatsJson =
+      json.decode(utf8Decode(response));
+      return ChatsResponse.fromJson(chatsJson);
+    }
+    throw ApiException(smthWentWrong);
+  } else {
+    throw ApiException(noConnectionMessage);
+  }
+}
+
+
+
 Future<Response> logout() async {
   final accessToken = await storage_manager.getAccessToken();
 
-  try{
+  try {
     final response = await http.post(callUrl(_logoutEndpoint),
         headers: _authHeader(accessToken));
     if (response.statusCode >= 500) {
@@ -109,7 +141,7 @@ Future<Response> logout() async {
       return Response(false, 'Logout successfully');
     }
     return Response(true, smthWentWrong);
-  } catch(_){
+  } catch (_) {
     return Response(true, noConnectionMessage);
   }
 }
@@ -155,8 +187,6 @@ Future<Response> changeUserData(
   final message = '${res.values.toList()[0][0].toString()}';
   return Response(true, message);
 }
-
-
 
 //Helpers
 String callUrl(String endpoint, {Map<String, String> query}) {

@@ -1,11 +1,12 @@
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/models/chat.dart';
-import 'package:true_chat/helpers/constants.dart';
+import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/widgets/pages/add_members_page.dart';
 import 'package:true_chat/widgets/custom_popup_menu.dart' as custom_popup;
 import 'package:true_chat/widgets/pages/user_page.dart';
+import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
 
 class EditGroupPage extends StatefulWidget {
   const EditGroupPage({@required this.chat}) : assert(chat != null);
@@ -20,11 +21,21 @@ class _EditGroupPageState extends State<EditGroupPage> {
   final _chatNameController = TextEditingController();
   final _chatDescriptionController = TextEditingController();
 
+  bool _isYourChat = false;
+
   @override
   void initState() {
     super.initState();
     _chatNameController.text = widget.chat.name;
     _chatDescriptionController.text = widget.chat.description;
+    _checkYourChat().then((result) {
+      _isYourChat = result;
+    });
+  }
+
+  Future<bool> _checkYourChat() async {
+    final User current = await storage_manager.getUser();
+    return current.id == widget.chat.creator.id;
   }
 
   @override
@@ -35,22 +46,59 @@ class _EditGroupPageState extends State<EditGroupPage> {
         title: Text(
           constants.editGroupPageTitle,
           style: Theme.of(context).textTheme.title.copyWith(
-                color: accentColor,
+                color: constants.accentColor,
                 fontWeight: FontWeight.bold,
               ),
         ),
-        backgroundColor: appBarColor,
+        backgroundColor: constants.appBarColor,
       ),
       body: _body(),
-      backgroundColor: backgroundColor,
+      backgroundColor: constants.backgroundColor,
     );
   }
 
   final InputDecoration _textFieldDecoration = InputDecoration(
       enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: accentColor, width: 2.0)),
+          borderSide: BorderSide(color: constants.accentColor, width: 2.0)),
       focusedBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: accentColor, width: 2.0)));
+          borderSide: BorderSide(color: constants.accentColor, width: 2.0)));
+
+  Widget _chatTitle() => _isYourChat
+      ? Expanded(
+          child: TextField(
+            controller: _chatNameController,
+            style:
+                Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+            decoration: _textFieldDecoration,
+            maxLines: 2,
+            minLines: 1,
+          ),
+        )
+      : Flexible(
+          child: Text(
+            widget.chat.name,
+            maxLines: 3,
+            style:
+                Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+          ),
+        );
+
+  Widget _chatDescription() => _isYourChat
+      ? TextField(
+          controller: _chatDescriptionController,
+          style: Theme.of(context).textTheme.body1.copyWith(
+                color: Colors.white,
+              ),
+          minLines: 1,
+          maxLines: 4,
+        )
+      : Text(
+          widget.chat.description,
+          maxLines: 5,
+          overflow: TextOverflow.ellipsis,
+          style:
+              Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+        );
 
   Widget _body() {
     return SingleChildScrollView(
@@ -59,7 +107,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
         child: Column(
           children: <Widget>[
             Container(
-              color: containerColor,
+              color: constants.containerColor,
               child: Padding(
                 padding: const EdgeInsets.all(10.0).copyWith(left: 20.0),
                 child: Row(
@@ -77,16 +125,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
                     const SizedBox(
                       width: 20.0,
                     ),
-                    Expanded(
-                      child: TextField(
-                        controller: _chatNameController,
-                        style: Theme.of(context)
-                            .textTheme
-                            .body1
-                            .copyWith(color: Colors.white),
-                        decoration: _textFieldDecoration,
-                      ),
-                    )
+                    _chatTitle(),
                   ],
                 ),
               ),
@@ -95,7 +134,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
               height: 8.0,
             ),
             Container(
-              color: containerColor,
+              color: constants.containerColor,
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -104,12 +143,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
                     'Description',
                     style: Theme.of(context).textTheme.body1,
                   ),
-                  TextField(
-                    controller: _chatDescriptionController,
-                    style: Theme.of(context).textTheme.body1.copyWith(
-                          color: Colors.white,
-                        ),
-                  ),
+                  _chatDescription(),
                 ],
               ),
             ),
@@ -117,7 +151,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
               height: 8.0,
             ),
             Container(
-              color: containerColor,
+              color: constants.containerColor,
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: <Widget>[
@@ -127,24 +161,29 @@ class _EditGroupPageState extends State<EditGroupPage> {
                       style: Theme.of(context).textTheme.body1,
                     ),
                   ),
-                  GestureDetector(
-                    child: Text(
-                      'Add',
-                      style: Theme.of(context).textTheme.body1,
-                    ),
-                    onTap: () => constants.goToPage(
+                  if (_isYourChat)
+                    GestureDetector(
+                      child: Text(
+                        'Add',
+                        style: Theme.of(context).textTheme.body1,
+                      ),
+                      onTap: () => constants.goToPage(
                         context,
                         AddMembersPage(
                           chatId: widget.chat.id,
-                        )),
-                  )
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
             const SizedBox(
               height: 8.0,
             ),
-            ListView.builder(
+            ListView.separated(
+              separatorBuilder: (context, index) => const SizedBox(
+                height: 8.0,
+              ),
               itemBuilder: (context, index) {
                 return _memberItem(index);
               },
@@ -164,7 +203,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
     return Container(
       padding: const EdgeInsets.all(8.0),
-      color: containerColor,
+      color: constants.containerColor,
       child: Row(
         children: <Widget>[
           CircularProfileAvatar(
@@ -174,8 +213,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
               initText,
               style: TextStyle(fontSize: 30, color: Colors.white),
             ),
-            backgroundColor: appBarColor,
-            borderColor: appBarColor,
+            backgroundColor: constants.appBarColor,
+            borderColor: constants.appBarColor,
           ),
           const SizedBox(
             width: 10.0,
@@ -226,24 +265,26 @@ class _EditGroupPageState extends State<EditGroupPage> {
               ),
             ),
           ),
-          custom_popup.PopupMenuItem(
-            value: 1,
-            child: Center(
-              child: Text(
-                'Kick',
-                style: Theme.of(context).textTheme.body1,
+          if (_isYourChat)
+            custom_popup.PopupMenuItem(
+              value: 1,
+              child: Center(
+                child: Text(
+                  'Kick',
+                  style: Theme.of(context).textTheme.body1,
+                ),
               ),
             ),
-          ),
-          custom_popup.PopupMenuItem(
-            value: 2,
-            child: Center(
-              child: Text(
-                'Ban',
-                style: Theme.of(context).textTheme.body1,
+          if (_isYourChat)
+            custom_popup.PopupMenuItem(
+              value: 2,
+              child: Center(
+                child: Text(
+                  'Ban',
+                  style: Theme.of(context).textTheme.body1,
+                ),
               ),
             ),
-          ),
         ],
         padding: EdgeInsets.zero,
         onSelected: (value) {
@@ -253,15 +294,19 @@ class _EditGroupPageState extends State<EditGroupPage> {
               break;
 
             case 1:
-              showDialog<void>(context: context,builder: (context){
-                return areYouSureDialog((){});
-              });
+              showDialog<void>(
+                  context: context,
+                  builder: (context) {
+                    return areYouSureDialog(() {});
+                  });
               break;
 
             case 2:
-              showDialog<void>(context: context,builder: (context){
-                return areYouSureDialog((){});
-              });
+              showDialog<void>(
+                  context: context,
+                  builder: (context) {
+                    return areYouSureDialog(() {});
+                  });
               break;
           }
         },
@@ -284,23 +329,31 @@ class _EditGroupPageState extends State<EditGroupPage> {
         ),
       ),
       content: Padding(
-        padding: const EdgeInsets.only(left: 8.0,right: 8.0),
+        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             Expanded(
               child: RaisedButton(
                 color: constants.containerColor,
-                child: Text('Yes',style: Theme.of(context).textTheme.body1,),
+                child: Text(
+                  'Yes',
+                  style: Theme.of(context).textTheme.body1,
+                ),
                 onPressed: confirmFunction,
               ),
             ),
-            const SizedBox(width: 8.0,),
+            const SizedBox(
+              width: 8.0,
+            ),
             Expanded(
               child: RaisedButton(
                 color: constants.containerColor,
-                child: Text('No',style: Theme.of(context).textTheme.body1,),
-                onPressed: (){
+                child: Text(
+                  'No',
+                  style: Theme.of(context).textTheme.body1,
+                ),
+                onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),

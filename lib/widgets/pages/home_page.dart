@@ -5,6 +5,7 @@ import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/user.dart';
+import 'package:true_chat/api/responses/chats_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
 import 'package:true_chat/widgets/pages/create_group_page.dart';
@@ -26,32 +27,12 @@ class _HomePageState extends State<HomePage> {
   String _firstName = 'N';
   String _lastName = 'S';
 
-  final List<Chat> _chats = [];
+  List<Chat> _chats = [];
 
   @override
   void initState() {
     super.initState();
     _initUserData();
-    for (int i = 0; i < 10; ++i) {
-      final List<User> users = [];
-      for (int j = 0; j < 5; j++) {
-        users.add(
-          User(
-            firstName: 'firstname $j',
-            lastName: 'lastname $j',
-            username: 'username $j',
-          ),
-        );
-      }
-      _chats.add(
-        Chat(
-          id: i,
-          name: 'Chat #$i',
-          description: 'Chat with number $i',
-          users: users,
-        ),
-      );
-    }
   }
 
   String _initialText() => '${_firstName[0]}${_lastName[0]}'.toUpperCase();
@@ -125,14 +106,32 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _body() {
-    return ListView.separated(
-      separatorBuilder: (context, index) => const SizedBox(
-        height: 8.0,
-      ),
-      itemBuilder: (context, index) => _chatItem(index),
-      itemCount: _chats.length,
-      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-    );
+    return FutureBuilder<ChatsResponse>(
+        future: api.fetchChats(1),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            _chats = snapshot.data.results;
+            return ListView.separated(
+              separatorBuilder: (context, index) => const SizedBox(
+                height: 8.0,
+              ),
+              itemBuilder: (context, index) => _chatItem(index),
+              itemCount: _chats.length,
+              padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+            );
+          } else if (snapshot.hasError) {
+            final api.ApiException error = snapshot.error;
+            return Center(
+              child: Text(
+                error.message,
+                style: Theme.of(context).textTheme.title,
+              ),
+            );
+          }
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        });
   }
 
   Widget _chatItem(int index) {
@@ -169,19 +168,14 @@ class _HomePageState extends State<HomePage> {
                 children: <Widget>[
                   Row(
                     children: <Widget>[
-                      Text(
-                        chat.name,
-                        style: Theme.of(context).textTheme.body1.copyWith(
-                              color: Colors.white,
-                            ),
-                      ),
-                      const Expanded(child: SizedBox()),
-                      Text(
-                        '20:24',
-                        style: Theme.of(context)
-                            .textTheme
-                            .body1
-                            .copyWith(fontSize: 16.0),
+                      Flexible(
+                        child: Text(
+                          chat.name,
+                          style: Theme.of(context).textTheme.body1.copyWith(
+                                color: Colors.white,
+                              ),
+                          maxLines: 2,
+                        ),
                       ),
                     ],
                   ),
@@ -189,7 +183,7 @@ class _HomePageState extends State<HomePage> {
                     height: 10.0,
                   ),
                   Text(
-                    'sajdksakdkasdkaksdkaasdsadsadsadsaddassdkdj',
+                    chat.description,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.body1,
                   ),
@@ -249,7 +243,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 onTap: () {
-                  constants.goToPage(context, UserPage());
+                  constants.goToPage(context, const UserPage());
                 },
               ),
             ),
