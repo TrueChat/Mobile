@@ -1,7 +1,10 @@
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
-import 'package:true_chat/api/models/user.dart';
+import 'package:true_chat/api/models/chat.dart';
+import 'package:true_chat/api/responses/create_chat_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
+import 'package:true_chat/api/api.dart' as api;
+import 'package:true_chat/widgets/pages/edit_group_page.dart';
 
 class CreateGroupPage extends StatefulWidget {
   @override
@@ -13,40 +16,51 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   final TextEditingController _groupDescriptionController =
       TextEditingController();
 
-  final List<User> _addedUsers = [];
-  final List<User> _usersToAdd = [];
+  bool _isLoading = false;
+
+  BuildContext _scaffoldContext;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(
-          constants.createGroupPageTitle,
-          style: Theme.of(context).textTheme.title.copyWith(
-                color: constants.accentColor,
-                fontWeight: FontWeight.bold,
-              ),
+    return Builder(builder: (context) {
+      _scaffoldContext = context;
+      return Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text(
+            constants.createGroupPageTitle,
+            style: Theme.of(context).textTheme.title.copyWith(
+                  color: constants.accentColor,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          backgroundColor: constants.appBarColor,
         ),
-        backgroundColor: constants.appBarColor,
-      ),
-      body: _body(),
-      backgroundColor: constants.backgroundColor,
-    );
+        body: Stack(
+          children: <Widget>[
+            _body(),
+            if (_isLoading)
+              Container(
+                color: Theme.of(context).backgroundColor.withOpacity(0.9),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).accentColor),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        backgroundColor: constants.backgroundColor,
+      );
+    });
   }
 
   @override
   void initState() {
     super.initState();
     _initTextControllers();
-    for (int i = 0; i < 10; i++) {
-      _addedUsers.add(User(
-          firstName: 'Name', lastName: 'Surname', username: 'username $i'));
-      _usersToAdd.add(User(
-          firstName: 'Name',
-          lastName: 'Surname',
-          username: 'username ${20 - i}'));
-    }
   }
 
   void _initTextControllers() {
@@ -60,60 +74,75 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
         SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-            child: Column(
-              children: <Widget>[
-                Container(
-                  color: constants.containerColor,
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: <Widget>[
-                      CircularProfileAvatar(
-                        'NC',
-                        radius: 40.0,
-                        initialsText: Text(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    color: constants.containerColor,
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: <Widget>[
+                        CircularProfileAvatar(
                           'NC',
-                          style: TextStyle(fontSize: 40, color: Colors.white),
+                          radius: 40.0,
+                          initialsText: Text(
+                            'NC',
+                            style: TextStyle(fontSize: 40, color: Colors.white),
+                          ),
+                          backgroundColor: constants.appBarColor,
+                          borderColor: constants.appBarColor,
                         ),
-                        backgroundColor: constants.appBarColor,
-                        borderColor: constants.appBarColor,
-                      ),
-                      const SizedBox(
-                        width: 20.0,
-                      ),
-                      Expanded(
-                        child: TextField(
-                          controller: _groupNameController,
+                        const SizedBox(
+                          width: 20.0,
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return 'Group name required';
+                              }
+                              return null;
+                            },
+                            controller: _groupNameController,
+                            style: Theme.of(context).textTheme.body1.copyWith(
+                                  color: Colors.white,
+                                ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 8.0,
+                  ),
+                  Container(
+                    color: constants.containerColor,
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Text(
+                          'Description',
+                          style: Theme.of(context).textTheme.body1,
+                        ),
+                        TextFormField(
+                          validator: (value) {
+                            if (value.isEmpty) {
+                              return 'Group description required';
+                            }
+                            return null;
+                          },
+                          controller: _groupDescriptionController,
                           style: Theme.of(context).textTheme.body1.copyWith(
                                 color: Colors.white,
                               ),
                         ),
-                      )
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(
-                  height: 8.0,
-                ),
-                Container(
-                  color: constants.containerColor,
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      Text(
-                        'Description',
-                        style: Theme.of(context).textTheme.body1,
-                      ),
-                      TextField(
-                        controller: _groupDescriptionController,
-                        style: Theme.of(context).textTheme.body1.copyWith(
-                              color: Colors.white,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -145,5 +174,32 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     );
   }
 
-  void _createGroupPressed() {}
+  Future<void> _createGroupPressed() async {
+    if (_formKey.currentState.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        final CreateChatResponse response = await api.createChat(
+            name: _groupNameController.text,
+            description: _groupDescriptionController.text);
+        final Chat chat = await api.getChat(id: response.id);
+        constants.goToPage(context, EditGroupPage(chat: chat,));
+        Navigator.of(context).pop();
+//        Navigator.of(context).pushAndRemoveUntil<void>(
+//            MaterialPageRoute(
+//              builder: (context) => EditGroupPage(
+//                chat: chat,
+//              ),
+//            ),
+//            (Route<dynamic> route) => false);
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        final api.ApiException error = e;
+        constants.snackBar(_scaffoldContext, error.message);
+      }
+    }
+  }
 }

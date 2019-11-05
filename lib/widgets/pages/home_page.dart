@@ -150,10 +150,10 @@ class _HomePageState extends State<HomePage> {
         child: Row(
           children: <Widget>[
             CircularProfileAvatar(
-              'NS',
+              '',
               radius: 40.0,
               initialsText: Text(
-                'NS',
+                'NC',
                 style: TextStyle(fontSize: 30, color: Colors.white),
               ),
               backgroundColor: constants.appBarColor,

@@ -1,35 +1,32 @@
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
+import 'package:true_chat/api/api.dart' as api;
 
 class AddMembersPage extends StatefulWidget {
+  const AddMembersPage({@required this.chat}) : assert(chat != null);
 
-  const AddMembersPage({@required this.chatId}) : assert(chatId != null);
-
-  final int chatId;
+  final Chat chat;
 
   @override
   _AddMembersPageState createState() => _AddMembersPageState();
 }
 
 class _AddMembersPageState extends State<AddMembersPage> {
+  List<User> _addUsersList = [];
 
-  final _addUsersList = <User>[];
+  List<User> _addedUsers;
 
   final _searchController = TextEditingController();
 
+  String _notFoundMessage = 'Nobody found(';
 
   @override
   void initState() {
     super.initState();
-    for(int i = 0; i < 10; i++){
-      _addUsersList.add(User(
-        firstName: 'Name',
-        lastName: 'Surname $i',
-        username: 'username $i'
-      ));
-    }
+    _addedUsers = widget.chat.users;
   }
 
   @override
@@ -40,9 +37,9 @@ class _AddMembersPageState extends State<AddMembersPage> {
         title: Text(
           constants.addMembersPageTitle,
           style: Theme.of(context).textTheme.title.copyWith(
-            color: constants.accentColor,
-            fontWeight: FontWeight.bold,
-          ),
+                color: constants.accentColor,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         backgroundColor: constants.appBarColor,
       ),
@@ -64,37 +61,91 @@ class _AddMembersPageState extends State<AddMembersPage> {
                   child: TextField(
                     controller: _searchController,
                     style: Theme.of(context).textTheme.body1.copyWith(
-                      color: Colors.white,
-                    ),
+                          color: Colors.white,
+                        ),
                     decoration: InputDecoration(hintText: 'Add people'),
+                    onChanged: _onSearchStringChanged,
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.search),
-                  onPressed: _searchPressed,
-                ),
+                    icon: Icon(Icons.search),
+                    onPressed: () async {
+                      await _onSearchStringChanged(_searchController.text);
+                    }),
               ],
             ),
           ),
-          const SizedBox(height: 8.0,),
-          ListView.separated(
-            separatorBuilder: (context, index) => const SizedBox(
-              height: 8.0,
-            ),
-            itemBuilder: (context, index) {
-              return _memberToAddItem(index);
-            },
-            itemCount: _addUsersList.length,
-            shrinkWrap: true,
-            physics: const ClampingScrollPhysics(),
+          const SizedBox(
+            height: 8.0,
           ),
+          _isFoundWidget(),
         ],
       ),
     );
   }
 
-  void _searchPressed(){
+  Widget _isFoundWidget() => _addUsersList.isEmpty
+      ? Text(
+          _notFoundMessage,
+          style: Theme.of(context).textTheme.title,
+        )
+      : ListView.separated(
+          separatorBuilder: (context, index) => const SizedBox(
+            height: 8.0,
+          ),
+          itemBuilder: (context, index) {
+            return _memberToAddItem(index);
+          },
+          itemCount: _addUsersList.length,
+          shrinkWrap: true,
+          physics: const ClampingScrollPhysics(),
+        );
 
+  Future<void> _onSearchStringChanged(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _notFoundMessage = 'Nobody found(';
+      });
+    } else {
+      try {
+        _addUsersList = await api.searchUser(query: query);
+        if (_isUserInList(widget.chat.creator, _addUsersList)) {
+          _addUsersList
+              .removeAt(indexOfUser(widget.chat.creator, _addUsersList));
+        }
+        setState(() {
+          if (_addUsersList.isEmpty) {
+            _notFoundMessage = '$query not found';
+          }
+        });
+      } catch (e) {
+        final api.ApiException error = e;
+        setState(() {
+          _notFoundMessage = error.message;
+        });
+      }
+    }
+  }
+
+  int indexOfUser(User user, List<User> users) {
+    int i = 0;
+    while (i < users.length) {
+      final User u = users[i];
+      if (user.id == u.id) {
+        return i;
+      }
+      i++;
+    }
+    return -1;
+  }
+
+  bool _isUserInList(User user, List<User> users) {
+    for (User u in users) {
+      if (u.id == user.id) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Widget _memberToAddItem(int index) {
@@ -125,8 +176,8 @@ class _AddMembersPageState extends State<AddMembersPage> {
                 Text(
                   '${user.firstName} ${user.lastName}',
                   style: Theme.of(context).textTheme.body1.copyWith(
-                    color: Colors.white,
-                  ),
+                        color: Colors.white,
+                      ),
                 ),
                 const SizedBox(
                   height: 10.0,
@@ -139,13 +190,23 @@ class _AddMembersPageState extends State<AddMembersPage> {
             ),
           ),
           IconButton(
-            icon:  Icon(Icons.add),
-            onPressed: (){
-
+            icon: _isUserInList(user, _addedUsers)
+                ? Icon(Icons.remove)
+                : Icon(Icons.add),
+            onPressed: () {
+              onAddUserPressed(user);
             },
           ),
         ],
       ),
     );
+  }
+
+  Future<void> onAddUserPressed(User user) async {
+    if (_isUserInList(user, _addedUsers)) {
+      //remove user
+    } else {
+      //add user
+    }
   }
 }

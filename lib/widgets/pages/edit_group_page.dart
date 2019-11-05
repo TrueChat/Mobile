@@ -28,9 +28,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
     super.initState();
     _chatNameController.text = widget.chat.name;
     _chatDescriptionController.text = widget.chat.description;
-    _checkYourChat().then((result) {
-      _isYourChat = result;
-    });
   }
 
   Future<bool> _checkYourChat() async {
@@ -57,6 +54,138 @@ class _EditGroupPageState extends State<EditGroupPage> {
     );
   }
 
+  Widget _body() {
+    return Stack(
+      children: <Widget>[
+        SingleChildScrollView(
+          child: FutureBuilder<bool>(
+            future: _checkYourChat(),
+            builder: (context, snapshot) {
+              if(snapshot.hasData){
+                _isYourChat = snapshot.data;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: Column(
+                    children: <Widget>[
+                      Container(
+                        color: constants.containerColor,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0).copyWith(left: 20.0),
+                          child: Row(
+                            children: <Widget>[
+                              CircularProfileAvatar(
+                                '',
+                                radius: 40.0,
+                                initialsText: Text(
+                                  'NC',
+                                  style: TextStyle(fontSize: 40, color: Colors.white),
+                                ),
+                                backgroundColor: constants.appBarColor,
+                                borderColor: constants.appBarColor,
+                              ),
+                              const SizedBox(
+                                width: 20.0,
+                              ),
+                              _chatTitle(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 8.0,
+                      ),
+                      Container(
+                        color: constants.containerColor,
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            Text(
+                              'Description',
+                              style: Theme.of(context).textTheme.body1,
+                            ),
+                            _chatDescription(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 8.0,
+                      ),
+                      Container(
+                        color: constants.containerColor,
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                '${widget.chat.users != null ? widget.chat.users.length : 0} members',
+                                style: Theme.of(context).textTheme.body1,
+                              ),
+                            ),
+                            if (_isYourChat)
+                              GestureDetector(
+                                child: Text(
+                                  'Add',
+                                  style: Theme.of(context).textTheme.body1,
+                                ),
+                                onTap: () => constants.goToPage(
+                                  context,
+                                  AddMembersPage(
+                                    chat: widget.chat,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 8.0,
+                      ),
+                      ListView.separated(
+                        separatorBuilder: (context, index) => const SizedBox(
+                          height: 8.0,
+                        ),
+                        itemBuilder: (context, index) {
+                          return _memberItem(index);
+                        },
+                        itemCount: widget.chat.users.length,
+                        shrinkWrap: true,
+                        physics: const ClampingScrollPhysics(),
+                      )
+                    ],
+                  ),
+                );
+              }
+              return const Center(child: CircularProgressIndicator(),);
+            }
+          ),
+        ),
+        Align(
+          alignment: Alignment.bottomRight,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10.0),
+            child: RawMaterialButton(
+              onPressed: _submitPressed,
+              child: Icon(
+                Icons.done,
+                color: Theme.of(context).backgroundColor,
+                size: 60.0,
+              ),
+              shape: CircleBorder(),
+              elevation: 2.0,
+              fillColor: constants.accentColor,
+              padding: const EdgeInsets.all(5.0),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _submitPressed(){
+
+  }
+
   final InputDecoration _textFieldDecoration = InputDecoration(
       enabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: constants.accentColor, width: 2.0)),
@@ -65,137 +194,40 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
   Widget _chatTitle() => _isYourChat
       ? Expanded(
-          child: TextField(
-            controller: _chatNameController,
-            style:
-                Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
-            decoration: _textFieldDecoration,
-            maxLines: 2,
-            minLines: 1,
-          ),
-        )
+    child: TextField(
+      controller: _chatNameController,
+      style:
+      Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+      decoration: _textFieldDecoration,
+      maxLines: 2,
+      minLines: 1,
+    ),
+  )
       : Flexible(
-          child: Text(
-            widget.chat.name,
-            maxLines: 3,
-            style:
-                Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
-          ),
-        );
+    child: Text(
+      widget.chat.name,
+      maxLines: 3,
+      style:
+      Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+    ),
+  );
 
   Widget _chatDescription() => _isYourChat
       ? TextField(
-          controller: _chatDescriptionController,
-          style: Theme.of(context).textTheme.body1.copyWith(
-                color: Colors.white,
-              ),
-          minLines: 1,
-          maxLines: 4,
-        )
+    controller: _chatDescriptionController,
+    style: Theme.of(context).textTheme.body1.copyWith(
+      color: Colors.white,
+    ),
+    minLines: 1,
+    maxLines: 4,
+  )
       : Text(
-          widget.chat.description,
-          maxLines: 5,
-          overflow: TextOverflow.ellipsis,
-          style:
-              Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
-        );
-
-  Widget _body() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 10.0),
-        child: Column(
-          children: <Widget>[
-            Container(
-              color: constants.containerColor,
-              child: Padding(
-                padding: const EdgeInsets.all(10.0).copyWith(left: 20.0),
-                child: Row(
-                  children: <Widget>[
-                    CircularProfileAvatar(
-                      '',
-                      radius: 40.0,
-                      initialsText: Text(
-                        'NC',
-                        style: TextStyle(fontSize: 40, color: Colors.white),
-                      ),
-                      backgroundColor: constants.appBarColor,
-                      borderColor: constants.appBarColor,
-                    ),
-                    const SizedBox(
-                      width: 20.0,
-                    ),
-                    _chatTitle(),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(
-              height: 8.0,
-            ),
-            Container(
-              color: constants.containerColor,
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Text(
-                    'Description',
-                    style: Theme.of(context).textTheme.body1,
-                  ),
-                  _chatDescription(),
-                ],
-              ),
-            ),
-            const SizedBox(
-              height: 8.0,
-            ),
-            Container(
-              color: constants.containerColor,
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Text(
-                      '${widget.chat.users != null ? widget.chat.users.length : 0} members',
-                      style: Theme.of(context).textTheme.body1,
-                    ),
-                  ),
-                  if (_isYourChat)
-                    GestureDetector(
-                      child: Text(
-                        'Add',
-                        style: Theme.of(context).textTheme.body1,
-                      ),
-                      onTap: () => constants.goToPage(
-                        context,
-                        AddMembersPage(
-                          chatId: widget.chat.id,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(
-              height: 8.0,
-            ),
-            ListView.separated(
-              separatorBuilder: (context, index) => const SizedBox(
-                height: 8.0,
-              ),
-              itemBuilder: (context, index) {
-                return _memberItem(index);
-              },
-              itemCount: widget.chat.users.length,
-              shrinkWrap: true,
-              physics: const ClampingScrollPhysics(),
-            )
-          ],
-        ),
-      ),
-    );
-  }
+    widget.chat.description,
+    maxLines: 5,
+    overflow: TextOverflow.ellipsis,
+    style:
+    Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+  );
 
   Widget _memberItem(int index) {
     final user = widget.chat.users[index];
