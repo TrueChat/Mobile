@@ -19,6 +19,10 @@ class _AddMembersPageState extends State<AddMembersPage> {
 
   List<User> _addedUsers;
 
+  BuildContext _scaffoldContext;
+
+  bool _isLoading = false;
+
   final _searchController = TextEditingController();
 
   String _notFoundMessage = 'Nobody found(';
@@ -34,16 +38,41 @@ class _AddMembersPageState extends State<AddMembersPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context, _addedUsers),
+        ),
         title: Text(
           constants.addMembersPageTitle,
           style: Theme.of(context).textTheme.title.copyWith(
-                color: constants.accentColor,
-                fontWeight: FontWeight.bold,
-              ),
+            color: constants.accentColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: constants.appBarColor,
       ),
-      body: _body(),
+      body: Builder(
+        builder: (context) {
+          _scaffoldContext = context;
+          return Stack(
+            children: <Widget>[
+              _body(),
+              if (_isLoading)
+                Container(
+                  color: Theme.of(context)
+                      .backgroundColor
+                      .withOpacity(0.9),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).accentColor),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        }
+      ),
       backgroundColor: constants.backgroundColor,
     );
   }
@@ -109,9 +138,10 @@ class _AddMembersPageState extends State<AddMembersPage> {
     } else {
       try {
         _addUsersList = await api.searchUser(query: query);
-        if (_isUserInList(widget.chat.creator, _addUsersList)) {
-          _addUsersList
-              .removeAt(indexOfUser(widget.chat.creator, _addUsersList));
+        for (User u in _addUsersList) {
+          if (_isUserInList(u, _addedUsers) || widget.chat.creator.id == u.id) {
+            _addUsersList.remove(u);
+          }
         }
         setState(() {
           if (_addUsersList.isEmpty) {
@@ -190,9 +220,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
             ),
           ),
           IconButton(
-            icon: _isUserInList(user, _addedUsers)
-                ? Icon(Icons.remove)
-                : Icon(Icons.add),
+            icon: Icon(Icons.add),
             onPressed: () {
               onAddUserPressed(user);
             },
@@ -203,10 +231,25 @@ class _AddMembersPageState extends State<AddMembersPage> {
   }
 
   Future<void> onAddUserPressed(User user) async {
-    if (_isUserInList(user, _addedUsers)) {
-      //remove user
-    } else {
-      //add user
+    if (!_isUserInList(user, _addedUsers)) {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        final Chat chat = await api.addUserToChat(
+            chatId: widget.chat.id, username: user.username);
+        setState(() {
+          _addedUsers = chat.users;
+          _isLoading = false;
+        });
+        constants.snackBar(
+            _scaffoldContext, '${user.username} added successfully');
+      } catch (e) {
+        final api.ApiException error = e;
+        constants.snackBar(_scaffoldContext, error.message);
+      }
+    }else{
+      constants.snackBar(_scaffoldContext, '${user.username} already added');
     }
   }
 }

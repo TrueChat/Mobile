@@ -87,7 +87,9 @@ class _HomePageState extends State<HomePage> {
             return _body();
           },
         ),
-        backgroundColor: Theme.of(context).backgroundColor,
+        backgroundColor: Theme
+            .of(context)
+            .backgroundColor,
         drawer: _leftSideDrawer(),
       ),
     );
@@ -99,9 +101,9 @@ class _HomePageState extends State<HomePage> {
     final User user = await storage_manager.getUser();
     setState(() {
       _firstName =
-          user.firstName == null || user.firstName == '' ? 'N' : user.firstName;
+      user.firstName == null || user.firstName == '' ? 'N' : user.firstName;
       _lastName =
-          user.lastName == null || user.lastName == '' ? 'S' : user.lastName;
+      user.lastName == null || user.lastName == '' ? 'S' : user.lastName;
     });
   }
 
@@ -112,7 +114,8 @@ class _HomePageState extends State<HomePage> {
           if (snapshot.hasData) {
             _chats = snapshot.data.results;
             return ListView.separated(
-              separatorBuilder: (context, index) => const SizedBox(
+              separatorBuilder: (context, index) =>
+              const SizedBox(
                 height: 8.0,
               ),
               itemBuilder: (context, index) => _chatItem(index),
@@ -124,7 +127,10 @@ class _HomePageState extends State<HomePage> {
             return Center(
               child: Text(
                 error.message,
-                style: Theme.of(context).textTheme.title,
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .title,
               ),
             );
           }
@@ -134,16 +140,27 @@ class _HomePageState extends State<HomePage> {
         });
   }
 
+  Future<void> _onChatItemPressed(int index) async {
+    final Chat result = await Navigator.push(
+      context,
+      MaterialPageRoute<Chat>(
+        builder: (context) =>
+            EditGroupPage(
+              chat: _chats[index],
+            ),
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        _chats[index] = result;
+      });
+    }
+  }
+
   Widget _chatItem(int index) {
     final chat = _chats[index];
     return GestureDetector(
-      onTap: () {
-        constants.goToPage(
-            context,
-            EditGroupPage(
-              chat: chat,
-            ));
-      },
+      onTap: () => _onChatItemPressed(index),
       child: Container(
         padding: const EdgeInsets.all(8.0),
         color: constants.containerColor,
@@ -171,9 +188,13 @@ class _HomePageState extends State<HomePage> {
                       Flexible(
                         child: Text(
                           chat.name,
-                          style: Theme.of(context).textTheme.body1.copyWith(
-                                color: Colors.white,
-                              ),
+                          style: Theme
+                              .of(context)
+                              .textTheme
+                              .body1
+                              .copyWith(
+                            color: Colors.white,
+                          ),
                           maxLines: 2,
                         ),
                       ),
@@ -185,7 +206,10 @@ class _HomePageState extends State<HomePage> {
                   Text(
                     chat.description,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.body1,
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .body1,
                   ),
                 ],
               ),
@@ -260,7 +284,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                   title: Text(
                     'Create group chat',
-                    style: Theme.of(context).textTheme.body1,
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .body1,
                   ),
                 ),
               ),
@@ -281,7 +308,10 @@ class _HomePageState extends State<HomePage> {
                       ),
                       title: Text(
                         'Logout',
-                        style: Theme.of(context).textTheme.body1,
+                        style: Theme
+                            .of(context)
+                            .textTheme
+                            .body1,
                       ),
                     ),
                   ),
@@ -300,7 +330,7 @@ class _HomePageState extends State<HomePage> {
       if (response != null && !response.isError) {
         Navigator.of(context).pushAndRemoveUntil<void>(
             MaterialPageRoute(builder: (context) => LogInPage()),
-            (Route<dynamic> route) => false);
+                (Route<dynamic> route) => false);
       } else {
         constants.snackBar(_scaffoldContext, response.message, Colors.red);
       }

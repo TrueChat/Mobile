@@ -24,6 +24,25 @@ class Chat {
     );
   }
 
+  Chat copyWith(
+      {int id,
+      String name,
+      String description,
+      User creator,
+      List<User> users,
+      bool isDialog,
+      String dateCreated}) {
+    return Chat(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      creator: creator ?? this.creator,
+      users: users ?? this.users,
+      isDialog: isDialog ?? this.isDialog,
+      dateCreated: dateCreated ?? this.dateCreated
+    );
+  }
+
   final int id;
   final String name;
   final String description;

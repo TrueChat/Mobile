@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/responses/chats_response.dart';
 import 'package:true_chat/api/responses/create_chat_response.dart';
+import 'package:true_chat/api/responses/edit_group_response.dart';
 import 'package:true_chat/api/responses/login_response.dart';
 import 'package:true_chat/api/responses/response.dart';
 import 'package:true_chat/api/responses/user_response.dart';
@@ -29,6 +30,17 @@ const _chatsEndpoint = 'chats/';
 String _chatEndpoint(int id) => 'chats/$id/';
 
 String _profilesEndpoint(String searchQuery) => 'profiles/$searchQuery';
+
+String _addUserToChatEndpoint(int chatId, String username) =>
+    'chats/$chatId/add_member/$username/';
+
+String _getProfileEndpoint(String username) => 'profile/$username';
+
+String _banMemberEndpoint(int chatId, String username) =>
+    'chats/$chatId/ban_member/$username/';
+
+String _deleteMemberEndpoint(int chatId, String username) =>
+    'chats/$chatId/delete_member/$username/';
 
 Map<String, String> _postHeaders = {
   'accept': 'application/json',
@@ -127,6 +139,72 @@ Future<Chat> getChat({@required int id}) async {
   throw ApiException(noConnectionMessage);
 }
 
+Future<EditGroupResponse> editChat(
+    {@required int id, String name, String description}) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final data = <String, String>{
+      'name': name,
+      'description': description,
+    };
+
+    final body = json.encode(data);
+
+    final Map<String, String> _header = _postHeaders;
+    _header.addAll(_authHeader(accessToken));
+
+    final response = await http.put(
+      callUrl(_chatEndpoint(id)),
+      headers: _header,
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> chatJson = json.decode(utf8Decode(response));
+      return EditGroupResponse.fromJson(chatJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<Chat> banMember({int chatId, String username}) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final response = await http.put(
+      callUrl(_banMemberEndpoint(chatId, username)),
+      headers: _authHeader(accessToken),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> chatJson = json.decode(utf8Decode(response));
+      return Chat.fromJson(chatJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<Chat> kickMember({int chatId, String username}) async{
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final response = await http.delete(
+      callUrl(_deleteMemberEndpoint(chatId, username)),
+      headers: _authHeader(accessToken),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> chatJson = json.decode(utf8Decode(response));
+      return Chat.fromJson(chatJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
 Future<List<User>> searchUser({@required String query}) async {
   if (await checkConnection()) {
     final accessToken = await storage_manager.getAccessToken();
@@ -136,11 +214,27 @@ Future<List<User>> searchUser({@required String query}) async {
       headers: _authHeader(accessToken),
     );
     if (response.statusCode == 200) {
-      final List<dynamic> userJson =
-          json.decode(utf8Decode(response));
+      final List<dynamic> userJson = json.decode(utf8Decode(response));
       final List<User> users =
           userJson.map((dynamic el) => User.fromJson(el)).toList();
       return users;
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<User> getProfile({String username}) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final response = await http.get(
+      callUrl(_getProfileEndpoint(username)),
+      headers: _authHeader(accessToken),
+    );
+    if (response.statusCode == 200) {
+      final dynamic userJson = json.decode(utf8Decode(response));
+      return User.fromJson(userJson);
     }
     throw ApiException(smthWentWrong);
   }
@@ -186,6 +280,26 @@ Future<CreateChatResponse> createChat(
     if (response.statusCode == 200) {
       final Map<String, dynamic> chatsJson = json.decode(utf8Decode(response));
       return CreateChatResponse.fromJson(chatsJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<Chat> addUserToChat(
+    {@required int chatId, @required String username}) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final url = callUrl(_addUserToChatEndpoint(chatId, username));
+    final Map<String, String> _header = _postHeaders;
+    _header.addAll(_authHeader(accessToken));
+
+    final response = await http.post(url, headers: _header);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> chatJson = json.decode(utf8Decode(response));
+      return Chat.fromJson(chatJson);
     }
     throw ApiException(smthWentWrong);
   }

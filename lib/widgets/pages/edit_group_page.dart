@@ -2,11 +2,13 @@ import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/user.dart';
+import 'package:true_chat/api/responses/edit_group_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/widgets/pages/add_members_page.dart';
 import 'package:true_chat/widgets/custom_popup_menu.dart' as custom_popup;
 import 'package:true_chat/widgets/pages/user_page.dart';
 import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
+import 'package:true_chat/api/api.dart' as api;
 
 class EditGroupPage extends StatefulWidget {
   const EditGroupPage({@required this.chat}) : assert(chat != null);
@@ -23,11 +25,20 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
   bool _isYourChat = false;
 
+  List<User> _groupMembers;
+
+  bool _isLoading = false;
+
+  Chat _changedChat;
+
+  BuildContext _scaffoldContext;
+
   @override
   void initState() {
     super.initState();
     _chatNameController.text = widget.chat.name;
     _chatDescriptionController.text = widget.chat.description;
+    _groupMembers = widget.chat.users;
   }
 
   Future<bool> _checkYourChat() async {
@@ -40,6 +51,10 @@ class _EditGroupPageState extends State<EditGroupPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context, _changedChat),
+        ),
         title: Text(
           constants.editGroupPageTitle,
           style: Theme.of(context).textTheme.title.copyWith(
@@ -49,7 +64,10 @@ class _EditGroupPageState extends State<EditGroupPage> {
         ),
         backgroundColor: constants.appBarColor,
       ),
-      body: _body(),
+      body: Builder(builder: (context) {
+        _scaffoldContext = context;
+        return _body();
+      }),
       backgroundColor: constants.backgroundColor,
     );
   }
@@ -59,106 +77,107 @@ class _EditGroupPageState extends State<EditGroupPage> {
       children: <Widget>[
         SingleChildScrollView(
           child: FutureBuilder<bool>(
-            future: _checkYourChat(),
-            builder: (context, snapshot) {
-              if(snapshot.hasData){
-                _isYourChat = snapshot.data;
-                return Padding(
-                  padding: const EdgeInsets.only(top: 10.0),
-                  child: Column(
-                    children: <Widget>[
-                      Container(
-                        color: constants.containerColor,
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0).copyWith(left: 20.0),
-                          child: Row(
-                            children: <Widget>[
-                              CircularProfileAvatar(
-                                '',
-                                radius: 40.0,
-                                initialsText: Text(
-                                  'NC',
-                                  style: TextStyle(fontSize: 40, color: Colors.white),
+              future: _checkYourChat(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  _isYourChat = snapshot.data;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          color: constants.containerColor,
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.all(10.0).copyWith(left: 20.0),
+                            child: Row(
+                              children: <Widget>[
+                                CircularProfileAvatar(
+                                  '',
+                                  radius: 40.0,
+                                  initialsText: Text(
+                                    'NC',
+                                    style: TextStyle(
+                                        fontSize: 40, color: Colors.white),
+                                  ),
+                                  backgroundColor: constants.appBarColor,
+                                  borderColor: constants.appBarColor,
                                 ),
-                                backgroundColor: constants.appBarColor,
-                                borderColor: constants.appBarColor,
+                                const SizedBox(
+                                  width: 20.0,
+                                ),
+                                _chatTitle(),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                        Container(
+                          color: constants.containerColor,
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              Text(
+                                'Description',
+                                style: Theme.of(context).textTheme.body1,
                               ),
-                              const SizedBox(
-                                width: 20.0,
-                              ),
-                              _chatTitle(),
+                              _chatDescription(),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(
-                        height: 8.0,
-                      ),
-                      Container(
-                        color: constants.containerColor,
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: <Widget>[
-                            Text(
-                              'Description',
-                              style: Theme.of(context).textTheme.body1,
-                            ),
-                            _chatDescription(),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 8.0,
-                      ),
-                      Container(
-                        color: constants.containerColor,
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: <Widget>[
-                            Expanded(
-                              child: Text(
-                                '${widget.chat.users != null ? widget.chat.users.length : 0} members',
-                                style: Theme.of(context).textTheme.body1,
-                              ),
-                            ),
-                            if (_isYourChat)
-                              GestureDetector(
-                                child: Text(
-                                  'Add',
-                                  style: Theme.of(context).textTheme.body1,
-                                ),
-                                onTap: () => constants.goToPage(
-                                  context,
-                                  AddMembersPage(
-                                    chat: widget.chat,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 8.0,
-                      ),
-                      ListView.separated(
-                        separatorBuilder: (context, index) => const SizedBox(
+                        const SizedBox(
                           height: 8.0,
                         ),
-                        itemBuilder: (context, index) {
-                          return _memberItem(index);
-                        },
-                        itemCount: widget.chat.users.length,
-                        shrinkWrap: true,
-                        physics: const ClampingScrollPhysics(),
-                      )
-                    ],
-                  ),
+                        Container(
+                          color: constants.containerColor,
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Text(
+                                  '${widget.chat.users != null ? widget.chat.users.length : 0} members',
+                                  style: Theme.of(context).textTheme.body1,
+                                ),
+                              ),
+                              if (_isYourChat)
+                                GestureDetector(
+                                  child: Text(
+                                    'Add',
+                                    style: Theme.of(context).textTheme.body1,
+                                  ),
+                                  onTap: _onAddMembersPressed,
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                        ListView.separated(
+                          separatorBuilder: (context, index) => const SizedBox(
+                            height: 8.0,
+                          ),
+                          itemBuilder: (context, index) {
+                            return _memberItem(index);
+                          },
+                          itemCount: _groupMembers.length,
+                          shrinkWrap: true,
+                          physics: const ClampingScrollPhysics(),
+                        ),
+                        const SizedBox(
+                          height: 80.0,
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return const Center(
+                  child: CircularProgressIndicator(),
                 );
-              }
-              return const Center(child: CircularProgressIndicator(),);
-            }
-          ),
+              }),
         ),
         Align(
           alignment: Alignment.bottomRight,
@@ -178,12 +197,42 @@ class _EditGroupPageState extends State<EditGroupPage> {
             ),
           ),
         ),
+        if (_isLoading)
+          Container(
+            color: Theme.of(context).backgroundColor.withOpacity(0.9),
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).accentColor),
+              ),
+            ),
+          ),
       ],
     );
   }
 
-  void _submitPressed(){
-
+  Future<void> _submitPressed() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      final EditGroupResponse response = await api.editChat(
+          id: widget.chat.id,
+          name: _chatNameController.text,
+          description: _chatDescriptionController.text);
+      _changedChat = widget.chat
+          .copyWith(name: response.name, description: response.description);
+      setState(() {
+        _isLoading = false;
+      });
+      constants.snackBar(_scaffoldContext, 'Group edited successfully');
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      final api.ApiException error = e;
+      constants.snackBar(_scaffoldContext, error.message);
+    }
   }
 
   final InputDecoration _textFieldDecoration = InputDecoration(
@@ -194,43 +243,43 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
   Widget _chatTitle() => _isYourChat
       ? Expanded(
-    child: TextField(
-      controller: _chatNameController,
-      style:
-      Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
-      decoration: _textFieldDecoration,
-      maxLines: 2,
-      minLines: 1,
-    ),
-  )
+          child: TextField(
+            controller: _chatNameController,
+            style:
+                Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+            decoration: _textFieldDecoration,
+            maxLines: 2,
+            minLines: 1,
+          ),
+        )
       : Flexible(
-    child: Text(
-      widget.chat.name,
-      maxLines: 3,
-      style:
-      Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
-    ),
-  );
+          child: Text(
+            widget.chat.name,
+            maxLines: 3,
+            style:
+                Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+          ),
+        );
 
   Widget _chatDescription() => _isYourChat
       ? TextField(
-    controller: _chatDescriptionController,
-    style: Theme.of(context).textTheme.body1.copyWith(
-      color: Colors.white,
-    ),
-    minLines: 1,
-    maxLines: 4,
-  )
+          controller: _chatDescriptionController,
+          style: Theme.of(context).textTheme.body1.copyWith(
+                color: Colors.white,
+              ),
+          minLines: 1,
+          maxLines: 4,
+        )
       : Text(
-    widget.chat.description,
-    maxLines: 5,
-    overflow: TextOverflow.ellipsis,
-    style:
-    Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
-  );
+          widget.chat.description,
+          maxLines: 5,
+          overflow: TextOverflow.ellipsis,
+          style:
+              Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+        );
 
   Widget _memberItem(int index) {
-    final user = widget.chat.users[index];
+    final user = _groupMembers[index];
     final initText = '${user.firstName[0]}${user.lastName[0]}'.toString();
 
     return Container(
@@ -322,14 +371,19 @@ class _EditGroupPageState extends State<EditGroupPage> {
         onSelected: (value) {
           switch (value) {
             case 0:
-              constants.goToPage(context, const UserPage());
+              constants.goToPage(
+                context,
+                UserPage(
+                  username: _groupMembers[index].username,
+                ),
+              );
               break;
 
             case 1:
               showDialog<void>(
                   context: context,
                   builder: (context) {
-                    return areYouSureDialog(() {});
+                    return areYouSureDialog(() => _kickMember(index));
                   });
               break;
 
@@ -337,13 +391,55 @@ class _EditGroupPageState extends State<EditGroupPage> {
               showDialog<void>(
                   context: context,
                   builder: (context) {
-                    return areYouSureDialog(() {});
+                    return areYouSureDialog(() => _banMember(index));
                   });
               break;
           }
         },
       ),
     );
+  }
+
+  Future<void> _kickMember(int index) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      await api.kickMember(
+          chatId: widget.chat.id, username: _groupMembers[index].username);
+      setState(() {
+        _groupMembers.removeAt(index);
+        _isLoading = false;
+      });
+      constants.snackBar(_scaffoldContext, 'User kicked successfully');
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      final api.ApiException error = e;
+      constants.snackBar(_scaffoldContext, error.message);
+    }
+  }
+
+  Future<void> _banMember(int index) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      await api.banMember(
+          chatId: widget.chat.id, username: _groupMembers[index].username);
+      setState(() {
+        _groupMembers.removeAt(index);
+        _isLoading = false;
+      });
+      constants.snackBar(_scaffoldContext, 'User banned successfully');
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      final api.ApiException error = e;
+      constants.snackBar(_scaffoldContext, error.message);
+    }
   }
 
   AlertDialog areYouSureDialog(Function confirmFunction) {
@@ -372,7 +468,10 @@ class _EditGroupPageState extends State<EditGroupPage> {
                   'Yes',
                   style: Theme.of(context).textTheme.body1,
                 ),
-                onPressed: confirmFunction,
+                onPressed: (){
+                  confirmFunction();
+                  Navigator.of(context).pop();
+                },
               ),
             ),
             const SizedBox(
@@ -394,5 +493,21 @@ class _EditGroupPageState extends State<EditGroupPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _onAddMembersPressed() async {
+    final List<User> result = await Navigator.push(
+      context,
+      MaterialPageRoute<List<User>>(
+        builder: (context) => AddMembersPage(
+          chat: widget.chat,
+        ),
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        _groupMembers = result;
+      });
+    }
   }
 }

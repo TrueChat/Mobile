@@ -8,9 +8,9 @@ import 'package:true_chat/widgets/pages/user_settings_page.dart';
 import 'package:true_chat/api/api.dart' as api;
 
 class UserPage extends StatefulWidget {
-  const UserPage({this.userId});
+  const UserPage({this.username});
 
-  final int userId;
+  final String username;
 
   @override
   _UserPageState createState() => _UserPageState();
@@ -38,7 +38,7 @@ class _UserPageState extends State<UserPage> {
       connection = await constants.checkConnection(
           connectionUrl: 'true-chat.herokuapp.com');
       if (connection) {
-        if (widget.userId == null) {
+        if (widget.username == null) {
           final response = await api.getCurrentUser();
           if (response.isError) {
             _loadingScreen.noConnection(message: response.message);
@@ -48,6 +48,17 @@ class _UserPageState extends State<UserPage> {
             setState(() {
               _isLoading = false;
             });
+          }
+        }else{
+          try{
+            final response = await api.getProfile(username: widget.username);
+            setState(() {
+              _user = response;
+              _isLoading = false;
+            });
+          }catch (e){
+            final api.ApiException error = e;
+            _loadingScreen.noConnection(message: error.message);
           }
         }
       } else {
@@ -195,20 +206,28 @@ class _UserPageState extends State<UserPage> {
                 ),
               ),
             ),
-            if (widget.userId == null)
+            if (widget.username == null)
               RaisedButton(
                 child: const Text('Settings'),
                 onPressed: () {
-                  constants.goToPage(
-                      context,
-                      UserSettingsPage(
-                        user: _user,
-                      ));
+                  _goToSettingsPage(context);
                 },
               ),
           ],
         ),
       ),
     );
+  }
+
+  Future _goToSettingsPage(BuildContext context) async{
+    final User result = await Navigator.push(
+        context,
+        MaterialPageRoute<User>(
+            builder: (context) => UserSettingsPage(user: _user,)));
+    if(result != null){
+      setState(() {
+        _user = result;
+      });
+    }
   }
 }

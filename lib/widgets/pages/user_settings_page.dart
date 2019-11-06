@@ -8,7 +8,6 @@ import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/widgets/loading_screen.dart';
 
 class UserSettingsPage extends StatefulWidget {
-
   const UserSettingsPage({@required this.user}) : assert(user != null);
 
   final User user;
@@ -46,6 +45,104 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
           borderSide: BorderSide(color: constants.accentColor, width: 2.0)),
       focusedBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: constants.accentColor, width: 2.0)));
+
+  @override
+  void initState() {
+    super.initState();
+    _loadingScreen = LoadingScreen(
+      doWhenReload: _initUserData,
+    );
+    _user = widget.user;
+    _updateUserData();
+  }
+
+  void _updateUserData() {
+    _currentName = _user.firstName == null || _user.firstName == ''
+        ? constants.yourName
+        : _user.firstName;
+    _currentSurname = _user.lastName == null || _user.lastName == ''
+        ? constants.yourSurName
+        : _user.lastName;
+    _currentBio = _user.about == null || _user.about == ''
+        ? constants.literallyAnything
+        : _user.about;
+    _currentUsername = _user.username;
+    _usernameController.text = _currentUsername;
+    _nameController.text = _currentName;
+    _surNameController.text = _currentSurname;
+    _bioController.text = _currentBio;
+  }
+
+  Future<void> _initUserData() async {
+    bool connection = await constants.checkConnection();
+    if (connection) {
+      connection = await constants.checkConnection(
+          connectionUrl: 'true-chat.herokuapp.com');
+      if (connection) {
+        final response = await api.getCurrentUser();
+        if (response.isError) {
+          _loadingScreen.noConnection(message: response.message);
+        } else {
+          final UserResponse userResponse = response;
+          setState(() {
+            _user = userResponse.user;
+            _updateUserData();
+            _isLoading = false;
+          });
+        }
+      } else {
+        _loadingScreen.noConnection(message: constants.noConnectionToServer);
+      }
+    } else {
+      _loadingScreen.noConnection();
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _usernameController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
+
+  void _fieldFocusChange(
+      BuildContext context, FocusNode currentFocus, FocusNode nextFocus) {
+    currentFocus.unfocus();
+    FocusScope.of(context).requestFocus(nextFocus);
+  }
+
+  void _onBackPressed(BuildContext context){
+    Navigator.pop(context, _user);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => _onBackPressed(context),
+        ),
+        centerTitle: true,
+        title: Text(
+          'Settings',
+          style: Theme.of(context).textTheme.title.copyWith(
+                color: constants.accentColor,
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        backgroundColor: constants.appBarColor,
+      ),
+      body: Builder(
+        builder: (context) {
+          _scaffoldContext = context;
+          return _isLoading ? _loadingScreen : _body();
+        },
+      ),
+      backgroundColor: Theme.of(context).backgroundColor,
+    );
+  }
 
   Widget _nameWidget() => _isNamePressed
       ? Expanded(
@@ -161,99 +258,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
           style:
               Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
         );
-
-  @override
-  void initState() {
-    super.initState();
-    _loadingScreen = LoadingScreen(
-      doWhenReload: _initUserData,
-    );
-    _user = widget.user;
-    _updateUserData();
-  }
-
-  void _updateUserData() {
-    _currentName = _user.firstName == null ||
-        _user.firstName == ''
-        ? constants.yourName
-        : _user.firstName;
-    _currentSurname =
-    _user.lastName == null || _user.lastName == ''
-            ? constants.yourSurName
-            : _user.lastName;
-    _currentBio =
-    _user.about == null || _user.about == ''
-            ? constants.literallyAnything
-            : _user.about;
-    _currentUsername = _user.username;
-    _usernameController.text = _currentUsername;
-    _nameController.text = _currentName;
-    _surNameController.text = _currentSurname;
-    _bioController.text = _currentBio;
-  }
-
-  Future<void> _initUserData() async {
-    bool connection = await constants.checkConnection();
-    if (connection) {
-      connection = await constants.checkConnection(
-          connectionUrl: 'true-chat.herokuapp.com');
-      if (connection) {
-        final response = await api.getCurrentUser();
-        if (response.isError) {
-          _loadingScreen.noConnection(message: response.message);
-        } else {
-          final UserResponse userResponse = response;
-          setState(() {
-            _user = userResponse.user;
-            _updateUserData();
-            _isLoading = false;
-          });
-        }
-      } else {
-        _loadingScreen.noConnection(message: constants.noConnectionToServer);
-      }
-    } else {
-      _loadingScreen.noConnection();
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _usernameController.dispose();
-    _bioController.dispose();
-    super.dispose();
-  }
-
-  void _fieldFocusChange(
-      BuildContext context, FocusNode currentFocus, FocusNode nextFocus) {
-    currentFocus.unfocus();
-    FocusScope.of(context).requestFocus(nextFocus);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(
-          'Settings',
-          style: Theme.of(context).textTheme.title.copyWith(
-                color: constants.accentColor,
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        backgroundColor: constants.appBarColor,
-      ),
-      body: Builder(
-        builder: (context) {
-          _scaffoldContext = context;
-          return _isLoading ? _loadingScreen : _body();
-        },
-      ),
-      backgroundColor: Theme.of(context).backgroundColor,
-    );
-  }
 
   Widget _body() {
     final _initialText =
