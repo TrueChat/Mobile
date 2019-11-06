@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/api.dart' as api;
 import 'package:true_chat/api/models/user.dart';
+import 'package:true_chat/api/responses/edit_user_response.dart';
 import 'package:true_chat/api/responses/user_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/widgets/loading_screen.dart';
@@ -112,7 +113,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     FocusScope.of(context).requestFocus(nextFocus);
   }
 
-  void _onBackPressed(BuildContext context){
+  void _onBackPressed(BuildContext context) {
     Navigator.pop(context, _user);
   }
 
@@ -475,6 +476,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         if (response.isError) {
           constants.snackBar(_scaffoldContext, response.message, Colors.red);
         } else {
+          final EditUserResponse res = response;
+          _user = _user.copyWith(
+              username: res.username,
+              firstName: res.first_name,
+              lastName: res.last_name,
+              about: res.about);
           setState(() {
             _isLoading = false;
           });

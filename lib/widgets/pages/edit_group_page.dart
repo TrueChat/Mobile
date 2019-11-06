@@ -280,7 +280,12 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
   Widget _memberItem(int index) {
     final user = _groupMembers[index];
-    final initText = '${user.firstName[0]}${user.lastName[0]}'.toString();
+    String initText;
+    if (user.firstName.isNotEmpty && user.lastName.isNotEmpty) {
+      initText = '${user.firstName[0]}${user.lastName[0]}'.toString();
+    } else {
+      initText = 'NS';
+    }
 
     return Container(
       padding: const EdgeInsets.all(8.0),
@@ -305,7 +310,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  '${user.firstName} ${user.lastName}',
+                  '${user.firstName.isEmpty ? 'Name' : user.firstName} ${user.lastName.isEmpty ? 'Surname' : user.lastName}',
                   style: Theme.of(context).textTheme.body1.copyWith(
                         color: Colors.white,
                       ),
@@ -468,7 +473,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
                   'Yes',
                   style: Theme.of(context).textTheme.body1,
                 ),
-                onPressed: (){
+                onPressed: () {
                   confirmFunction();
                   Navigator.of(context).pop();
                 },

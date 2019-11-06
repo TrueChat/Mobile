@@ -6,6 +6,7 @@ import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/widgets/loading_screen.dart';
 import 'package:true_chat/widgets/pages/user_settings_page.dart';
 import 'package:true_chat/api/api.dart' as api;
+import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
 
 class UserPage extends StatefulWidget {
   const UserPage({this.username});
@@ -23,6 +24,8 @@ class _UserPageState extends State<UserPage> {
 
   User _user;
 
+  bool _isOwner = false;
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +41,9 @@ class _UserPageState extends State<UserPage> {
       connection = await constants.checkConnection(
           connectionUrl: 'true-chat.herokuapp.com');
       if (connection) {
-        if (widget.username == null) {
+        final User user = await storage_manager.getUser();
+        if (widget.username == user.username || widget.username == null) {
+          _isOwner = true;
           final response = await api.getCurrentUser();
           if (response.isError) {
             _loadingScreen.noConnection(message: response.message);
@@ -49,14 +54,14 @@ class _UserPageState extends State<UserPage> {
               _isLoading = false;
             });
           }
-        }else{
-          try{
+        } else {
+          try {
             final response = await api.getProfile(username: widget.username);
             setState(() {
               _user = response;
               _isLoading = false;
             });
-          }catch (e){
+          } catch (e) {
             final api.ApiException error = e;
             _loadingScreen.noConnection(message: error.message);
           }
@@ -74,6 +79,10 @@ class _UserPageState extends State<UserPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context, true),
+        ),
         title: Text(
           'User profile',
           style: TextStyle(
@@ -88,7 +97,15 @@ class _UserPageState extends State<UserPage> {
     );
   }
 
-  String avatarText() => '${_user.firstName[0]}${_user.lastName[0]}';
+  String avatarText() {
+    String avatarText;
+    if (_user.firstName.isEmpty || _user.lastName.isEmpty) {
+      avatarText = 'NS';
+    } else {
+      avatarText = '${_user.firstName[0]}${_user.lastName[0]}';
+    }
+    return avatarText;
+  }
 
   Widget _body() {
     return SingleChildScrollView(
@@ -119,7 +136,7 @@ class _UserPageState extends State<UserPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          _user.firstName,
+                          _user.firstName.isEmpty ? 'Name' : _user.firstName,
                           style: Theme.of(context).textTheme.body1.copyWith(
                               color: Colors.white, fontWeight: FontWeight.bold),
                         ),
@@ -127,7 +144,7 @@ class _UserPageState extends State<UserPage> {
                           height: 10.0,
                         ),
                         Text(
-                          _user.lastName,
+                          _user.lastName.isEmpty ? 'Surname' : _user.lastName,
                           style: Theme.of(context).textTheme.body1.copyWith(
                               color: Colors.white, fontWeight: FontWeight.bold),
                         )
@@ -193,7 +210,7 @@ class _UserPageState extends State<UserPage> {
                             height: 10.0,
                           ),
                           Text(
-                            _user.about,
+                            _user.about ?? '',
                             style: Theme.of(context)
                                 .textTheme
                                 .body1
@@ -206,12 +223,16 @@ class _UserPageState extends State<UserPage> {
                 ),
               ),
             ),
-            if (widget.username == null)
+            const SizedBox(
+              height: 10.0,
+            ),
+            if (_isOwner)
               RaisedButton(
                 child: const Text('Settings'),
                 onPressed: () {
                   _goToSettingsPage(context);
                 },
+                color: Theme.of(context).accentColor,
               ),
           ],
         ),
@@ -219,12 +240,14 @@ class _UserPageState extends State<UserPage> {
     );
   }
 
-  Future _goToSettingsPage(BuildContext context) async{
+  Future _goToSettingsPage(BuildContext context) async {
     final User result = await Navigator.push(
         context,
         MaterialPageRoute<User>(
-            builder: (context) => UserSettingsPage(user: _user,)));
-    if(result != null){
+            builder: (context) => UserSettingsPage(
+                  user: _user,
+                )));
+    if (result != null) {
       setState(() {
         _user = result;
       });

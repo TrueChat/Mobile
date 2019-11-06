@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:true_chat/helpers/constants.dart';
 
-class User{
+class User {
 
   User({this.id, this.username, this.email, this.firstName, this.lastName,
     this.about, this.dateJoined, this.lastLogin});
@@ -19,7 +19,7 @@ class User{
     );
   }
 
-  factory User.fromJson(Map<String,dynamic> json){
+  factory User.fromJson(Map<String, dynamic> json){
     return User(
       id: json['id'],
       username: json['username'],
@@ -29,6 +29,21 @@ class User{
       about: json['about'],
       dateJoined: json['date_joined'],
       lastLogin: json['last_login'],
+    );
+  }
+
+  User copyWith(
+      {int id, String username, String email, String firstName, String lastName,
+        String about, String dateJoined, String lastLogin}){
+    return User(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      about: about ?? this.about,
+      dateJoined: dateJoined ?? this.dateJoined,
+      lastLogin: lastLogin ?? this.lastLogin,
     );
   }
 

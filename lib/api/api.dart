@@ -6,6 +6,7 @@ import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/responses/chats_response.dart';
 import 'package:true_chat/api/responses/create_chat_response.dart';
 import 'package:true_chat/api/responses/edit_group_response.dart';
+import 'package:true_chat/api/responses/edit_user_response.dart';
 import 'package:true_chat/api/responses/login_response.dart';
 import 'package:true_chat/api/responses/response.dart';
 import 'package:true_chat/api/responses/user_response.dart';
@@ -358,10 +359,10 @@ Future<Response> changeUserData(
   if (response.statusCode >= 500) {
     return Response(true, smthWentWrong);
   }
-  final Map<String, dynamic> res = json.decode(response.body);
+  final Map<String, dynamic> res = json.decode(utf8Decode(response));
   if (response.statusCode >= 200 && response.statusCode < 300) {
     await getCurrentUser();
-    return Response(false, 'Updated Successfully');
+    return EditUserResponse.fromJson(res);
   }
   final message = '${res.values.toList()[0][0].toString()}';
   return Response(true, message);

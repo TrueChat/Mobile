@@ -267,7 +267,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 onTap: () {
-                  constants.goToPage(context, const UserPage());
+                  _goToUserPage(context);
                 },
               ),
             ),
@@ -323,6 +323,16 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  Future _goToUserPage(BuildContext context) async{
+    final bool result = await Navigator.push(
+        context,
+        MaterialPageRoute<bool>(
+            builder: (context) => const UserPage()));
+    if(result){
+      _initUserData();
+    }
   }
 
   Future<void> _logout() async {
