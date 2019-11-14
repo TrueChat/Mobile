@@ -4,7 +4,7 @@ import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/edit_group_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
-import 'package:true_chat/widgets/pages/add_members_page.dart';
+import 'package:true_chat/widgets/pages/search_members_page.dart';
 import 'package:true_chat/widgets/custom_popup_menu.dart' as custom_popup;
 import 'package:true_chat/widgets/pages/user_page.dart';
 import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
@@ -32,6 +32,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
   Chat _changedChat;
 
   BuildContext _scaffoldContext;
+
+  String _initText = '';
 
   @override
   void initState() {
@@ -73,15 +75,21 @@ class _EditGroupPageState extends State<EditGroupPage> {
   }
 
   Widget _body() {
-    return Stack(
-      children: <Widget>[
-        SingleChildScrollView(
-          child: FutureBuilder<bool>(
-              future: _checkYourChat(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  _isYourChat = snapshot.data;
-                  return Padding(
+    return FutureBuilder<bool>(
+        future: _checkYourChat(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            _isYourChat = snapshot.data;
+            final List<String> chatName = widget.chat.name.split(' ');
+            if (chatName.length == 2) {
+              _initText = '${chatName[0][0]}${chatName[1][0]}';
+            } else {
+              _initText = '${chatName[0][0]}';
+            }
+            return Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Padding(
                     padding: const EdgeInsets.only(top: 10.0),
                     child: Column(
                       children: <Widget>[
@@ -96,7 +104,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
                                   '',
                                   radius: 40.0,
                                   initialsText: Text(
-                                    'NC',
+                                    _initText.toUpperCase(),
                                     style: TextStyle(
                                         fontSize: 40, color: Colors.white),
                                   ),
@@ -142,6 +150,20 @@ class _EditGroupPageState extends State<EditGroupPage> {
                                   style: Theme.of(context).textTheme.body1,
                                 ),
                               ),
+                              if(!_isYourChat)
+                                GestureDetector(
+                                  child: Text(
+                                    'Leave',
+                                    style:
+                                    Theme.of(context).textTheme.body1.copyWith(
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                  onTap: (){
+                                    _leaveGroupPressed();
+                                  },
+                                ),
+                              const SizedBox(width: 16.0,),
                               if (_isYourChat)
                                 GestureDetector(
                                   child: Text(
@@ -167,48 +189,126 @@ class _EditGroupPageState extends State<EditGroupPage> {
                           shrinkWrap: true,
                           physics: const ClampingScrollPhysics(),
                         ),
-                        const SizedBox(
-                          height: 80.0,
-                        ),
+                        if (_isYourChat)
+                          const SizedBox(
+                            height: 80.0,
+                          ),
                       ],
                     ),
-                  );
-                }
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }),
-        ),
-        Align(
-          alignment: Alignment.bottomRight,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 10.0),
-            child: RawMaterialButton(
-              onPressed: _submitPressed,
-              child: Icon(
-                Icons.done,
-                color: Theme.of(context).backgroundColor,
-                size: 60.0,
+                  ),
+                ),
+                if (_isYourChat)
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0),
+                      child: RawMaterialButton(
+                        onPressed: _submitPressed,
+                        child: Icon(
+                          Icons.done,
+                          color: Theme.of(context).backgroundColor,
+                          size: 60.0,
+                        ),
+                        shape: CircleBorder(),
+                        elevation: 2.0,
+                        fillColor: constants.accentColor,
+                        padding: const EdgeInsets.all(5.0),
+                      ),
+                    ),
+                  ),
+                if (_isLoading)
+                  Container(
+                    color: Theme.of(context).backgroundColor.withOpacity(0.9),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).accentColor),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          }
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        });
+  }
+
+  Future<void> _leaveGroupPressed() async{
+    showDialog<void>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            titlePadding: EdgeInsets.zero,
+            contentPadding: EdgeInsets.zero,
+            backgroundColor: constants.backgroundColor,
+            title: Container(
+              color: constants.containerColor,
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Are you sure?',
+                style: Theme.of(context).textTheme.title,
+                textAlign: TextAlign.center,
               ),
-              shape: CircleBorder(),
-              elevation: 2.0,
-              fillColor: constants.accentColor,
-              padding: const EdgeInsets.all(5.0),
             ),
-          ),
-        ),
-        if (_isLoading)
-          Container(
-            color: Theme.of(context).backgroundColor.withOpacity(0.9),
-            child: Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).accentColor),
+            content: Padding(
+              padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  Expanded(
+                    child: RaisedButton(
+                      color: constants.containerColor,
+                      child: Text(
+                        'Yes',
+                        style: Theme.of(context).textTheme.body1,
+                      ),
+                      onPressed: () async{
+                        Navigator.of(context).pop();
+                        await _leaveGroup();
+                      },
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 8.0,
+                  ),
+                  Expanded(
+                    child: RaisedButton(
+                      color: constants.containerColor,
+                      child: Text(
+                        'No',
+                        style: Theme.of(context).textTheme.body1,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  )
+                ],
               ),
             ),
-          ),
-      ],
-    );
+          );
+        });
+  }
+
+  Future<void> _leaveGroup() async{
+     try{
+       setState(() {
+         _isLoading = true;
+       });
+       await api.leaveGroup(groupId: widget.chat.id);
+       setState(() {
+         _isLoading = false;
+       });
+       Navigator.of(context).pop();
+     }catch (e){
+       setState(() {
+         _isLoading = false;
+       });
+       final api.ApiException error = e;
+       constants.snackBar(_scaffoldContext, error.message,Colors.red);
+     }
   }
 
   Future<void> _submitPressed() async {
@@ -250,6 +350,16 @@ class _EditGroupPageState extends State<EditGroupPage> {
             decoration: _textFieldDecoration,
             maxLines: 2,
             minLines: 1,
+            onChanged: (query) {
+              final List<String> queryList = query.split(' ');
+              setState(() {
+                if (queryList.length == 2) {
+                  _initText = '${queryList[0][0]}${queryList[1][0]}';
+                } else {
+                  _initText = '${queryList[0][0]}';
+                }
+              });
+            },
           ),
         )
       : Flexible(
@@ -504,7 +614,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
     final List<User> result = await Navigator.push(
       context,
       MaterialPageRoute<List<User>>(
-        builder: (context) => AddMembersPage(
+        builder: (context) => SearchMembersPage(
           chat: widget.chat,
         ),
       ),

@@ -18,26 +18,27 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
 
   bool _isLoading = false;
 
-  BuildContext _scaffoldContext;
   final _formKey = GlobalKey<FormState>();
+
+  BuildContext _scaffoldContext;
 
   @override
   Widget build(BuildContext context) {
-    return Builder(builder: (context) {
-      _scaffoldContext = context;
-      return Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: Text(
-            constants.createGroupPageTitle,
-            style: Theme.of(context).textTheme.title.copyWith(
-                  color: constants.accentColor,
-                  fontWeight: FontWeight.bold,
-                ),
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          constants.createGroupPageTitle,
+          style: Theme.of(context).textTheme.title.copyWith(
+            color: constants.accentColor,
+            fontWeight: FontWeight.bold,
           ),
-          backgroundColor: constants.appBarColor,
         ),
-        body: Stack(
+        backgroundColor: constants.appBarColor,
+      ),
+      body: Builder(builder: (context){
+        _scaffoldContext = context;
+        return Stack(
           children: <Widget>[
             _body(),
             if (_isLoading)
@@ -51,21 +52,10 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 ),
               ),
           ],
-        ),
-        backgroundColor: constants.backgroundColor,
-      );
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _initTextControllers();
-  }
-
-  void _initTextControllers() {
-    _groupNameController.text = 'New Cool Group';
-    _groupDescriptionController.text = 'Dropdown description';
+        );
+      }),
+      backgroundColor: constants.backgroundColor,
+    );
   }
 
   Widget _body() {
@@ -108,6 +98,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                             style: Theme.of(context).textTheme.body1.copyWith(
                                   color: Colors.white,
                                 ),
+                            decoration: InputDecoration(
+                              hintText: 'New Cool Group'
+                            ),
                           ),
                         )
                       ],
@@ -137,6 +130,9 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                           style: Theme.of(context).textTheme.body1.copyWith(
                                 color: Colors.white,
                               ),
+                          decoration: InputDecoration(
+                              hintText: 'Group description'
+                          ),
                         ),
                       ],
                     ),
@@ -166,7 +162,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                   ),
                 ],
               ),
-              onTap: _createGroupPressed,
+              onTap: () => _createGroupPressed(),
             ),
           ),
         ),
@@ -184,15 +180,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             name: _groupNameController.text,
             description: _groupDescriptionController.text);
         final Chat chat = await api.getChat(id: response.id);
-        constants.goToPage(context, EditGroupPage(chat: chat,));
         Navigator.of(context).pop();
-//        Navigator.of(context).pushAndRemoveUntil<void>(
-//            MaterialPageRoute(
-//              builder: (context) => EditGroupPage(
-//                chat: chat,
-//              ),
-//            ),
-//            (Route<dynamic> route) => false);
+        constants.goToPage(context, EditGroupPage(chat: chat,));
       } catch (e) {
         setState(() {
           _isLoading = false;

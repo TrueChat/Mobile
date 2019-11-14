@@ -43,6 +43,8 @@ String _banMemberEndpoint(int chatId, String username) =>
 String _deleteMemberEndpoint(int chatId, String username) =>
     'chats/$chatId/delete_member/$username/';
 
+String _leaveGroupEndpoint(int groupId) => 'chats/$groupId/delete_member/';
+
 Map<String, String> _postHeaders = {
   'accept': 'application/json',
   'Content-Type': 'application/json; charset=utf-8',
@@ -194,6 +196,24 @@ Future<Chat> kickMember({int chatId, String username}) async{
 
     final response = await http.delete(
       callUrl(_deleteMemberEndpoint(chatId, username)),
+      headers: _authHeader(accessToken),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> chatJson = json.decode(utf8Decode(response));
+      return Chat.fromJson(chatJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<Chat> leaveGroup({int groupId}) async{
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final response = await http.delete(
+      callUrl(_leaveGroupEndpoint(groupId)),
       headers: _authHeader(accessToken),
     );
 

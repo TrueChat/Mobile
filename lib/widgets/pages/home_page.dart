@@ -11,6 +11,7 @@ import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
 import 'package:true_chat/widgets/pages/create_group_page.dart';
 import 'package:true_chat/widgets/pages/edit_group_page.dart';
 import 'package:true_chat/widgets/pages/login_page.dart';
+import 'package:true_chat/widgets/pages/search_members_page.dart';
 import 'package:true_chat/widgets/pages/user_page.dart';
 import 'package:true_chat/api/api.dart' as api;
 
@@ -19,7 +20,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with RouteAware {
   BuildContext _scaffoldContext;
 
   bool _isBackTappedTwice = false;
@@ -28,6 +29,30 @@ class _HomePageState extends State<HomePage> {
   String _lastName = 'S';
 
   List<Chat> _chats = [];
+
+  final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context));
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPush() {
+    _initChats();
+  }
+
+  @override
+  void didPopNext() {
+    _initChats();
+  }
 
   @override
   void initState() {
@@ -73,12 +98,6 @@ class _HomePageState extends State<HomePage> {
             ],
             mainAxisAlignment: MainAxisAlignment.center,
           ),
-          actions: <Widget>[
-            IconButton(
-              icon: Icon(Icons.search),
-              onPressed: _searchPressed,
-            )
-          ],
           backgroundColor: constants.appBarColor,
         ),
         body: Builder(
@@ -87,24 +106,32 @@ class _HomePageState extends State<HomePage> {
             return _body();
           },
         ),
-        backgroundColor: Theme
-            .of(context)
-            .backgroundColor,
+        backgroundColor: Theme.of(context).backgroundColor,
         drawer: _leftSideDrawer(),
       ),
     );
   }
 
-  void _searchPressed() {}
-
   Future<void> _initUserData() async {
     final User user = await storage_manager.getUser();
     setState(() {
       _firstName =
-      user.firstName == null || user.firstName == '' ? 'N' : user.firstName;
+          user.firstName == null || user.firstName == '' ? 'N' : user.firstName;
       _lastName =
-      user.lastName == null || user.lastName == '' ? 'S' : user.lastName;
+          user.lastName == null || user.lastName == '' ? 'S' : user.lastName;
     });
+  }
+
+  Future<void> _initChats() async {
+    try {
+      final ChatsResponse response = await api.fetchChats(1);
+      setState(() {
+        _chats = response.results;
+      });
+    } catch (e) {
+      final api.ApiException error = e;
+      constants.snackBar(_scaffoldContext, error.message);
+    }
   }
 
   Widget _body() {
@@ -114,8 +141,7 @@ class _HomePageState extends State<HomePage> {
           if (snapshot.hasData) {
             _chats = snapshot.data.results;
             return ListView.separated(
-              separatorBuilder: (context, index) =>
-              const SizedBox(
+              separatorBuilder: (context, index) => const SizedBox(
                 height: 8.0,
               ),
               itemBuilder: (context, index) => _chatItem(index),
@@ -127,10 +153,7 @@ class _HomePageState extends State<HomePage> {
             return Center(
               child: Text(
                 error.message,
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .title,
+                style: Theme.of(context).textTheme.title,
               ),
             );
           }
@@ -144,10 +167,9 @@ class _HomePageState extends State<HomePage> {
     final Chat result = await Navigator.push(
       context,
       MaterialPageRoute<Chat>(
-        builder: (context) =>
-            EditGroupPage(
-              chat: _chats[index],
-            ),
+        builder: (context) => EditGroupPage(
+          chat: _chats[index],
+        ),
       ),
     );
     if (result != null) {
@@ -159,6 +181,13 @@ class _HomePageState extends State<HomePage> {
 
   Widget _chatItem(int index) {
     final chat = _chats[index];
+    String initText = '';
+    final List<String> chatName = chat.name.split(' ');
+    if (chatName.length == 2) {
+      initText = '${chatName[0][0]}${chatName[1][0]}';
+    } else {
+      initText = '${chatName[0][0]}';
+    }
     return GestureDetector(
       onTap: () => _onChatItemPressed(index),
       child: Container(
@@ -170,7 +199,7 @@ class _HomePageState extends State<HomePage> {
               '',
               radius: 40.0,
               initialsText: Text(
-                'NC',
+                initText.toUpperCase(),
                 style: TextStyle(fontSize: 30, color: Colors.white),
               ),
               backgroundColor: constants.appBarColor,
@@ -188,13 +217,9 @@ class _HomePageState extends State<HomePage> {
                       Flexible(
                         child: Text(
                           chat.name,
-                          style: Theme
-                              .of(context)
-                              .textTheme
-                              .body1
-                              .copyWith(
-                            color: Colors.white,
-                          ),
+                          style: Theme.of(context).textTheme.body1.copyWith(
+                                color: Colors.white,
+                              ),
                           maxLines: 2,
                         ),
                       ),
@@ -206,10 +231,7 @@ class _HomePageState extends State<HomePage> {
                   Text(
                     chat.description,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .body1,
+                    style: Theme.of(context).textTheme.body1,
                   ),
                 ],
               ),
@@ -284,15 +306,33 @@ class _HomePageState extends State<HomePage> {
                   ),
                   title: Text(
                     'Create group chat',
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .body1,
+                    style: Theme.of(context).textTheme.body1,
                   ),
                 ),
               ),
               onTap: () {
                 constants.goToPage(context, CreateGroupPage());
+              },
+            ),
+            const SizedBox(
+              height: 8.0,
+            ),
+            GestureDetector(
+              child: Container(
+                color: constants.containerColor,
+                child: ListTile(
+                  leading: Icon(
+                    Icons.search,
+                    color: constants.fontColor,
+                  ),
+                  title: Text(
+                    'Search for users',
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                ),
+              ),
+              onTap: () {
+                constants.goToPage(context, const SearchMembersPage());
               },
             ),
             Expanded(
@@ -308,10 +348,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       title: Text(
                         'Logout',
-                        style: Theme
-                            .of(context)
-                            .textTheme
-                            .body1,
+                        style: Theme.of(context).textTheme.body1,
                       ),
                     ),
                   ),
@@ -325,12 +362,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future _goToUserPage(BuildContext context) async{
-    final bool result = await Navigator.push(
-        context,
-        MaterialPageRoute<bool>(
-            builder: (context) => const UserPage()));
-    if(result){
+  Future _goToUserPage(BuildContext context) async {
+    final bool result = await Navigator.push(context,
+        MaterialPageRoute<bool>(builder: (context) => const UserPage()));
+    if (result) {
       _initUserData();
     }
   }
@@ -340,7 +375,7 @@ class _HomePageState extends State<HomePage> {
       if (response != null && !response.isError) {
         Navigator.of(context).pushAndRemoveUntil<void>(
             MaterialPageRoute(builder: (context) => LogInPage()),
-                (Route<dynamic> route) => false);
+            (Route<dynamic> route) => false);
       } else {
         constants.snackBar(_scaffoldContext, response.message, Colors.red);
       }

@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       home: FutureBuilder(
         future: storage_manager.isLoggedIn(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData) {
             final bool isLoggedIn = snapshot.data;
             return isLoggedIn ? HomePage() : LogInPage();
           } else {

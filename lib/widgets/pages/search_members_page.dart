@@ -4,17 +4,18 @@ import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/api/api.dart' as api;
+import 'package:true_chat/widgets/pages/user_page.dart';
 
-class AddMembersPage extends StatefulWidget {
-  const AddMembersPage({@required this.chat}) : assert(chat != null);
+class SearchMembersPage extends StatefulWidget {
+  const SearchMembersPage({this.chat});
 
   final Chat chat;
 
   @override
-  _AddMembersPageState createState() => _AddMembersPageState();
+  _SearchMembersPageState createState() => _SearchMembersPageState();
 }
 
-class _AddMembersPageState extends State<AddMembersPage> {
+class _SearchMembersPageState extends State<SearchMembersPage> {
   List<User> _addUsersList = [];
 
   List<User> _addedUsers;
@@ -25,12 +26,12 @@ class _AddMembersPageState extends State<AddMembersPage> {
 
   final _searchController = TextEditingController();
 
-  String _notFoundMessage = 'Nobody found(';
+  String _notFoundMessage = '';
 
   @override
   void initState() {
     super.initState();
-    _addedUsers = widget.chat.users;
+    _addedUsers = widget.chat == null ? null : widget.chat.users;
   }
 
   @override
@@ -43,36 +44,32 @@ class _AddMembersPageState extends State<AddMembersPage> {
           onPressed: () => Navigator.pop(context, _addedUsers),
         ),
         title: Text(
-          constants.addMembersPageTitle,
+          widget.chat == null ? 'Search users' : constants.addMembersPageTitle,
           style: Theme.of(context).textTheme.title.copyWith(
-            color: constants.accentColor,
-            fontWeight: FontWeight.bold,
-          ),
+                color: constants.accentColor,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         backgroundColor: constants.appBarColor,
       ),
-      body: Builder(
-        builder: (context) {
-          _scaffoldContext = context;
-          return Stack(
-            children: <Widget>[
-              _body(),
-              if (_isLoading)
-                Container(
-                  color: Theme.of(context)
-                      .backgroundColor
-                      .withOpacity(0.9),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).accentColor),
-                    ),
+      body: Builder(builder: (context) {
+        _scaffoldContext = context;
+        return Stack(
+          children: <Widget>[
+            _body(),
+            if (_isLoading)
+              Container(
+                color: Theme.of(context).backgroundColor.withOpacity(0.9),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).accentColor),
                   ),
                 ),
-            ],
-          );
-        }
-      ),
+              ),
+          ],
+        );
+      }),
       backgroundColor: constants.backgroundColor,
     );
   }
@@ -133,14 +130,16 @@ class _AddMembersPageState extends State<AddMembersPage> {
   Future<void> _onSearchStringChanged(String query) async {
     if (query.isEmpty) {
       setState(() {
-        _notFoundMessage = 'Nobody found(';
+        _notFoundMessage = '';
       });
     } else {
       try {
         _addUsersList = await api.searchUser(query: query);
-        for (User u in _addUsersList) {
-          if (_isUserInList(u, _addedUsers) || widget.chat.creator.id == u.id) {
-            _addUsersList.remove(u);
+        if(widget.chat != null){
+          for (User u in _addUsersList) {
+            if (_isUserInList(u, _addedUsers) || widget.chat.creator.id == u.id) {
+              _addUsersList.remove(u);
+            }
           }
         }
         setState(() {
@@ -180,52 +179,61 @@ class _AddMembersPageState extends State<AddMembersPage> {
 
   Widget _memberToAddItem(int index) {
     final user = _addUsersList[index];
-    final initText = '${user.firstName[0]}${user.lastName[0]}'.toUpperCase();
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      color: constants.containerColor,
-      child: Row(
-        children: <Widget>[
-          CircularProfileAvatar(
-            initText,
-            radius: 30.0,
-            initialsText: Text(
+    final initText =
+        '${user.firstName.isEmpty ? 'N' : user.firstName[0]}${user.lastName.isEmpty ? 'S' : user.lastName[0]}';
+    return GestureDetector(
+      onTap: (){
+        if(widget.chat == null){
+          constants.goToPage(context, UserPage(username: user.username,));
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8.0),
+        color: constants.containerColor,
+        child: Row(
+          children: <Widget>[
+            CircularProfileAvatar(
               initText,
-              style: TextStyle(fontSize: 30, color: Colors.white),
+              radius: 30.0,
+              initialsText: Text(
+                initText,
+                style: TextStyle(fontSize: 30, color: Colors.white),
+              ),
+              backgroundColor: constants.appBarColor,
+              borderColor: constants.appBarColor,
             ),
-            backgroundColor: constants.appBarColor,
-            borderColor: constants.appBarColor,
-          ),
-          const SizedBox(
-            width: 10.0,
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  '${user.firstName} ${user.lastName}',
-                  style: Theme.of(context).textTheme.body1.copyWith(
-                        color: Colors.white,
-                      ),
-                ),
-                const SizedBox(
-                  height: 10.0,
-                ),
-                Text(
-                  '@${user.username}',
-                  style: Theme.of(context).textTheme.body1,
-                ),
-              ],
+            const SizedBox(
+              width: 10.0,
             ),
-          ),
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () {
-              onAddUserPressed(user);
-            },
-          ),
-        ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    '${user.firstName.isEmpty ? 'Name' : user.firstName} ${user.lastName.isEmpty ? 'Surname' : user.lastName}',
+                    style: Theme.of(context).textTheme.body1.copyWith(
+                          color: Colors.white,
+                        ),
+                  ),
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                  Text(
+                    '@${user.username}',
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                ],
+              ),
+            ),
+            if(widget.chat != null)
+              IconButton(
+                icon: Icon(Icons.add),
+                onPressed: () {
+                  onAddUserPressed(user);
+                },
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -248,7 +256,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
         final api.ApiException error = e;
         constants.snackBar(_scaffoldContext, error.message);
       }
-    }else{
+    } else {
       constants.snackBar(_scaffoldContext, '${user.username} already added');
     }
   }

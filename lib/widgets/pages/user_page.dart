@@ -91,6 +91,13 @@ class _UserPageState extends State<UserPage> {
               fontWeight: FontWeight.bold),
         ),
         backgroundColor: constants.appBarColor,
+        actions: <Widget>[
+          if(_isOwner)
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () => _goToSettingsPage(context),
+            ),
+        ],
       ),
       body: _isLoading ? _loadingScreen : _body(),
       backgroundColor: Theme.of(context).backgroundColor,
@@ -226,14 +233,6 @@ class _UserPageState extends State<UserPage> {
             const SizedBox(
               height: 10.0,
             ),
-            if (_isOwner)
-              RaisedButton(
-                child: const Text('Settings'),
-                onPressed: () {
-                  _goToSettingsPage(context);
-                },
-                color: Theme.of(context).accentColor,
-              ),
           ],
         ),
       ),
