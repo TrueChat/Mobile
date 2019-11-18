@@ -31,15 +31,6 @@ Future<String> getAccessToken() async {
   return await _secureStorage.read(key: accessTokenKey);
 }
 
-Future<bool> isFirstLaunch() async {
-  final pref = await SharedPreferences.getInstance();
-  if (!pref.containsKey(isFirstLaunchKey)) {
-    await pref.setBool(isFirstLaunchKey, false);
-    return true;
-  }
-  return false;
-}
-
 Future<bool> isLoggedIn() async {
   final String accessToken = await _secureStorage.read(key: accessTokenKey);
   return accessToken != null;
