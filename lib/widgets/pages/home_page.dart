@@ -8,8 +8,8 @@ import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/chats_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
+import 'package:true_chat/widgets/pages/chat_page.dart';
 import 'package:true_chat/widgets/pages/create_group_page.dart';
-import 'package:true_chat/widgets/pages/edit_group_page.dart';
 import 'package:true_chat/widgets/pages/login_page.dart';
 import 'package:true_chat/widgets/pages/search_members_page.dart';
 import 'package:true_chat/widgets/pages/user_page.dart';
@@ -175,7 +175,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
     final Chat result = await Navigator.push(
       context,
       MaterialPageRoute<Chat>(
-        builder: (context) => EditGroupPage(
+        builder: (context) => ChatPage(
           chat: _chats[index],
         ),
       ),
