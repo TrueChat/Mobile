@@ -14,6 +14,7 @@ import 'package:true_chat/widgets/pages/login_page.dart';
 import 'package:true_chat/widgets/pages/search_members_page.dart';
 import 'package:true_chat/widgets/pages/user_page.dart';
 import 'package:true_chat/api/api.dart' as api;
+import 'package:true_chat/widgets/pages/user_settings_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -120,6 +121,13 @@ class _HomePageState extends State<HomePage> with RouteAware {
       _lastName =
           user.lastName == null || user.lastName == '' ? 'S' : user.lastName;
     });
+    if (user.firstName.isEmpty || user.lastName.isEmpty) {
+      final bool result = await Navigator.push(context,
+          MaterialPageRoute<bool>(builder: (context) => UserSettingsPage(user: user)));
+      if (result) {
+        _initUserData();
+      }
+    }
   }
 
   Future<void> _initChats() async {

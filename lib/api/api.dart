@@ -190,7 +190,7 @@ Future<Chat> banMember({int chatId, String username}) async {
   throw ApiException(noConnectionMessage);
 }
 
-Future<Chat> kickMember({int chatId, String username}) async{
+Future<Chat> kickMember({int chatId, String username}) async {
   if (await checkConnection()) {
     final accessToken = await storage_manager.getAccessToken();
 
@@ -208,7 +208,7 @@ Future<Chat> kickMember({int chatId, String username}) async{
   throw ApiException(noConnectionMessage);
 }
 
-Future<Chat> leaveGroup({int groupId}) async{
+Future<Chat> leaveGroup({int groupId}) async {
   if (await checkConnection()) {
     final accessToken = await storage_manager.getAccessToken();
 
@@ -346,18 +346,19 @@ Future<Response> logout() async {
   }
 }
 
-Future<Response> changeUserData(
-    {String name,
-    String surname,
-    String bio,
-    @required String username}) async {
+Future<Response> changeUserData({
+  String firstName,
+  String lastName,
+  String about,
+  @required String username,
+}) async {
   final accessToken = await storage_manager.getAccessToken();
 
   final data = <String, String>{
-    if (name != null) 'first_name': name,
-    if (bio != null) 'about': bio,
-    if (surname != null) 'last_name': surname,
-    'username': username
+    if (firstName != null) 'first_name': firstName,
+    if (about != null) 'about': about,
+    if (lastName != null) 'last_name': lastName,
+    'username': username,
   };
 
   String body;

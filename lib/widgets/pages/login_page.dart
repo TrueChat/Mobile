@@ -4,7 +4,7 @@ import 'package:true_chat/blocs/bloc.dart';
 import 'package:true_chat/blocs/login/login_bloc.dart';
 import 'package:true_chat/blocs/login/login_event.dart';
 import 'package:true_chat/blocs/login/login_state.dart';
-import 'package:true_chat/helpers/constants.dart';
+import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/helpers/ensure_visible_when_hidden.dart';
 import 'package:true_chat/widgets/pages/home_page.dart';
 
@@ -74,7 +74,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
           title: Row(
             children: <Widget>[
               Image.asset(
-                logoAsset,
+                constants.logoAsset,
                 height: 30.0,
                 width: 30.0,
               ),
@@ -83,17 +83,17 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
               ),
               Text(
                 'True chat',
-                style: TextStyle(fontSize: 28.0, color: accentColor),
+                style: TextStyle(fontSize: 28.0, color: constants.accentColor),
               ),
             ],
             mainAxisAlignment: MainAxisAlignment.center,
           ),
-          backgroundColor: appBarColor,
+          backgroundColor: constants.appBarColor,
         ),
         body: BlocListener<LoginBloc, LoginState>(
           listener: (context, state) {
             if (state is LoginStateError) {
-              snackBar(_scaffoldContext, state.message, Colors.red);
+              constants.snackBar(_scaffoldContext, state.message, Colors.red);
             } else if (state is LoginStateSuccess) {
               Navigator.of(context).pushAndRemoveUntil<void>(
                   MaterialPageRoute(builder: (context) => HomePage()),
@@ -117,7 +117,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
           },
           child: Builder(builder: (context) {
             _scaffoldContext = context;
-            return BlocBuilder<LoginBloc,LoginState>(
+            return BlocBuilder<LoginBloc, LoginState>(
                 bloc: _loginBloc,
                 builder: (context, state) {
                   return Stack(
@@ -152,7 +152,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
         const SizedBox(
           height: 20.0,
         ),
-        BlocBuilder<LoginPageControllerBloc,LoginTab>(
+        BlocBuilder<LoginPageControllerBloc, LoginTab>(
             bloc: _loginPageControllerBloc,
             builder: (context, state) {
               return topMenuRow();
@@ -210,7 +210,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
   BoxDecoration _decoration(LoginTab tab) {
     Color color;
     if (tab != _loginPageControllerBloc.currentState) {
-      color = fontColor;
+      color = constants.fontColor;
     } else {
       color = Colors.transparent;
     }
@@ -240,17 +240,18 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
   }
 
   InputDecoration _textFieldDecoration(String labelText) => InputDecoration(
-        contentPadding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 35.0),
+        contentPadding:
+            const EdgeInsets.only(left: 10.0, right: 10.0, top: 35.0),
         border: OutlineInputBorder(
-            borderSide: BorderSide(color: fontColor),
+            borderSide: BorderSide(color: constants.fontColor),
             borderRadius: BorderRadius.circular(5.0)),
         enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: fontColor),
+            borderSide: BorderSide(color: constants.fontColor),
             borderRadius: BorderRadius.circular(5.0)),
         focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: fontColor),
+            borderSide: BorderSide(color: constants.fontColor),
             borderRadius: BorderRadius.circular(5.0)),
-        fillColor: fontColor,
+        fillColor: constants.fontColor,
         labelText: labelText,
         labelStyle: Theme.of(context).textTheme.title,
       );
@@ -264,21 +265,21 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
           child: Column(
             children: <Widget>[
               Container(
-                width: textFieldWidth,
+                width: constants.textFieldWidth,
                 child: TextFormField(
                   validator: (value) {
                     if (value.isEmpty) {
                       return 'Login required';
                     }
-                    if (!loginRegExp.hasMatch(value)) {
+                    if (!constants.loginRegExp.hasMatch(value)) {
                       return 'Wrong Login';
                     }
                     return null;
                   },
                   controller: _emailController,
-                  cursorColor: fontColor,
+                  cursorColor: constants.fontColor,
                   focusNode: _focusNodeLoginEmail,
-                  decoration: _textFieldDecoration(loginHint),
+                  decoration: _textFieldDecoration(constants.loginHint),
                   style: Theme.of(context).textTheme.body1,
                   textInputAction: TextInputAction.next,
                   onFieldSubmitted: (term) {
@@ -291,7 +292,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                 height: 25.0,
               ),
               Container(
-                width: textFieldWidth,
+                width: constants.textFieldWidth,
                 child: TextFormField(
                   validator: (value) {
                     if (value.isEmpty) {
@@ -301,9 +302,9 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                   },
                   controller: _passwordController,
                   obscureText: true,
-                  cursorColor: fontColor,
+                  cursorColor: constants.fontColor,
                   focusNode: _focusNodeLoginPassword,
-                  decoration: _textFieldDecoration(passwordHint),
+                  decoration: _textFieldDecoration(constants.passwordHint),
                   style: Theme.of(context).textTheme.body1,
                   onFieldSubmitted: (term) {
                     _logInPressed();
@@ -354,20 +355,20 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
           child: Column(
             children: <Widget>[
               Container(
-                width: textFieldWidth,
+                width: constants.textFieldWidth,
                 child: TextFormField(
                   validator: (value) {
                     if (value.isEmpty) {
                       return 'Emil required';
                     }
-                    if (!emailRegExp.hasMatch(value)) {
+                    if (!constants.emailRegExp.hasMatch(value)) {
                       return 'Wrong email';
                     }
                     return null;
                   },
                   controller: _regEmailController,
-                  cursorColor: fontColor,
-                  decoration: _textFieldDecoration(emailHint),
+                  cursorColor: constants.fontColor,
+                  decoration: _textFieldDecoration(constants.emailHint),
                   focusNode: _focusNodeRegEmail,
                   textInputAction: TextInputAction.next,
                   style: Theme.of(context).textTheme.body1,
@@ -381,22 +382,22 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                 height: 30.0,
               ),
               Container(
-                width: textFieldWidth,
+                width: constants.textFieldWidth,
                 child: TextFormField(
                   validator: (value) {
                     if (value.isEmpty) {
                       return 'Login required';
                     }
-                    if (!loginRegExp.hasMatch(value)) {
+                    if (!constants.loginRegExp.hasMatch(value)) {
                       return 'Wrong login';
                     }
                     return null;
                   },
                   controller: _regUsernameController,
                   focusNode: _focusNodeRegUsername,
-                  cursorColor: fontColor,
+                  cursorColor: constants.fontColor,
                   textInputAction: TextInputAction.next,
-                  decoration: _textFieldDecoration(loginHint),
+                  decoration: _textFieldDecoration(constants.loginHint),
                   style: Theme.of(context).textTheme.body1,
                   onFieldSubmitted: (term) {
                     _fieldFocusChange(
@@ -408,7 +409,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                 height: 30.0,
               ),
               Container(
-                width: textFieldWidth,
+                width: constants.textFieldWidth,
                 child: TextFormField(
                   validator: (value) {
                     if (value.isEmpty) {
@@ -420,8 +421,8 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                   obscureText: true,
                   focusNode: _focusNodeRegPassword,
                   textInputAction: TextInputAction.next,
-                  cursorColor: fontColor,
-                  decoration: _textFieldDecoration(passwordHint),
+                  cursorColor: constants.fontColor,
+                  decoration: _textFieldDecoration(constants.passwordHint),
                   style: Theme.of(context).textTheme.body1,
                   onFieldSubmitted: (term) {
                     _fieldFocusChange(context, _focusNodeRegPassword,
@@ -433,7 +434,7 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                 height: 30.0,
               ),
               Container(
-                width: textFieldWidth,
+                width: constants.textFieldWidth,
                 child: EnsureVisibleWhenFocused(
                   focusNode: _focusNodeRegConfirmPassword,
                   child: TextFormField(
@@ -449,8 +450,8 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
                     controller: _regPassword2Controller,
                     obscureText: true,
                     focusNode: _focusNodeRegConfirmPassword,
-                    cursorColor: fontColor,
-                    decoration: _textFieldDecoration(password2Hint),
+                    cursorColor: constants.fontColor,
+                    decoration: _textFieldDecoration(constants.password2Hint),
                     style: Theme.of(context).textTheme.body1,
                     onFieldSubmitted: (term) {
                       _registerPressed();
@@ -500,8 +501,13 @@ class _LogInPageState extends State<LogInPage> with WidgetsBindingObserver {
       final password = _regPasswordController.text;
       final email = _regEmailController.text;
 
-      _loginBloc.dispatch(RegisterSubmitted(
-          email: email, username: username, password: password));
+      _loginBloc.dispatch(
+        RegisterSubmitted(
+          username: username,
+          email: email,
+          password: password,
+        ),
+      );
     }
   }
 }

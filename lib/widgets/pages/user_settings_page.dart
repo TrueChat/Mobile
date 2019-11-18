@@ -21,7 +21,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   LoadingScreen _loadingScreen;
 
   bool _isNamePressed = false;
-  bool _isUsernamePressed = false;
   bool _isBioPressed = false;
   bool _isLoading = false;
 
@@ -29,11 +28,9 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surNameController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   String _currentName;
   String _currentSurname;
-  String _currentUsername;
   String _currentBio;
 
   final FocusNode _focusNodeSurname = FocusNode();
@@ -67,8 +64,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     _currentBio = _user.about == null || _user.about == ''
         ? constants.literallyAnything
         : _user.about;
-    _currentUsername = _user.username;
-    _usernameController.text = _currentUsername;
     _nameController.text = _currentName;
     _surNameController.text = _currentSurname;
     _bioController.text = _currentBio;
@@ -102,7 +97,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   @override
   void dispose() {
     _nameController.dispose();
-    _usernameController.dispose();
     _bioController.dispose();
     super.dispose();
   }
@@ -162,7 +156,9 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                 },
                 decoration: _textFieldDecoration,
                 onChanged: (query) {
-                  _currentName = query;
+                  setState(() {
+                    _currentName = query;
+                  });
                 },
                 focusNode: _focusNodeName,
                 textInputAction: TextInputAction.next,
@@ -181,7 +177,9 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                 },
                 decoration: _textFieldDecoration,
                 onChanged: (query) {
-                  _currentSurname = query;
+                  setState(() {
+                    _currentSurname = query;
+                  });
                 },
                 focusNode: _focusNodeSurname,
               ),
@@ -211,30 +209,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
           ],
         );
 
-  Widget _usernameWidget() => _isUsernamePressed
-      ? Expanded(
-          child: TextField(
-            controller: _usernameController,
-            style:
-                Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
-            autofocus: true,
-            onSubmitted: (query) {
-              setState(() {
-                _isUsernamePressed = !_isUsernamePressed;
-              });
-            },
-            onChanged: (query) {
-              _currentUsername = query;
-            },
-            decoration: _textFieldDecoration,
-          ),
-        )
-      : Text(
-          _currentUsername,
-          style:
-              Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
-        );
-
   Widget _bioWidget() => _isBioPressed
       ? TextField(
           minLines: 1,
@@ -260,9 +234,14 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
               Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
         );
 
+  String _initialText(){
+    String result = '';
+    result += _nameController.text.isEmpty ? 'N' : _nameController.text[0];
+    result += _surNameController.text.isEmpty ? 'S' : _surNameController.text[0];
+    return result;
+  }
+
   Widget _body() {
-    final _initialText =
-        '${_nameController.text[0]}${_surNameController.text[0]}'.toUpperCase();
     return Stack(
       children: <Widget>[
         SingleChildScrollView(
@@ -280,7 +259,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                           '',
                           radius: 40.0,
                           initialsText: Text(
-                            _initialText,
+                            _initialText(),
                             style: TextStyle(fontSize: 40, color: Colors.white),
                           ),
                           backgroundColor: constants.appBarColor,
@@ -304,61 +283,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                             setState(() {
                               if (!_isNamePressed) {
                                 _isBioPressed = false;
-                                _isUsernamePressed = false;
                                 _isNamePressed = !_isNamePressed;
-                              }
-                            });
-                          },
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 10.0,
-                ),
-                Container(
-                  color: constants.containerColor,
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0).copyWith(left: 20.0),
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              const Text('Username'),
-                              const SizedBox(
-                                height: 10.0,
-                              ),
-                              Row(
-                                children: <Widget>[
-                                  Text(
-                                    '@',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .body1
-                                        .copyWith(color: constants.fontColor),
-                                  ),
-                                  _usernameWidget()
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.edit,
-                            color: constants.fontColor,
-                          ),
-                          iconSize: 30.0,
-                          onPressed: () {
-                            setState(() {
-                              if (!_isUsernamePressed) {
-                                _isNamePressed = false;
-                                _isBioPressed = false;
-                                _isUsernamePressed = !_isUsernamePressed;
                               }
                             });
                           },
@@ -409,7 +334,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                             setState(() {
                               if (!_isBioPressed) {
                                 _isNamePressed = false;
-                                _isUsernamePressed = false;
                                 _isBioPressed = !_isBioPressed;
                               }
                             });
@@ -466,21 +390,20 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
       if (_currentSurname != constants.yourSurName) {
         surname = _currentSurname;
       }
-      api
-          .changeUserData(
-              name: name,
-              surname: surname,
-              bio: bio,
-              username: _currentUsername)
+      api.changeUserData(
+        firstName: name,
+        lastName: surname,
+        about: bio,
+        username: _user.username,
+      )
           .then((response) {
         if (response.isError) {
           constants.snackBar(_scaffoldContext, response.message, Colors.red);
         } else {
           final EditUserResponse res = response;
           _user = _user.copyWith(
-              username: res.username,
-              firstName: res.first_name,
-              lastName: res.last_name,
+              firstName: res.firstName,
+              lastName: res.lastName,
               about: res.about);
           setState(() {
             _isLoading = false;
