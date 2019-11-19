@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:true_chat/api/models/chat.dart';
+import 'package:true_chat/api/models/message.dart';
 import 'package:true_chat/api/responses/chats_response.dart';
 import 'package:true_chat/api/responses/create_chat_response.dart';
 import 'package:true_chat/api/responses/edit_group_response.dart';
@@ -29,6 +31,8 @@ const _logoutEndpoint = 'rest-auth/logout/';
 const _chatsEndpoint = 'chats/';
 
 String _chatEndpoint(int id) => 'chats/$id/';
+
+String _chatMessagesEndpoint(int id) => 'chats/$id/messages/';
 
 String _profilesEndpoint(String searchQuery) => 'profiles/$searchQuery';
 
@@ -239,6 +243,25 @@ Future<List<User>> searchUser({@required String query}) async {
       final List<User> users =
           userJson.map((dynamic el) => User.fromJson(el)).toList();
       return users;
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<List<Message>> getMessages({@required int id}) async{
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final response = await http.get(
+      callUrl(_chatMessagesEndpoint(id)),
+      headers: _authHeader(accessToken),
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> messagesJson = json.decode(utf8Decode(response));
+      final List<Message> messages =
+      messagesJson.map((dynamic el) => Message.fromJson(el)).toList();
+      return messages;
     }
     throw ApiException(smthWentWrong);
   }

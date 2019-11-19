@@ -49,6 +49,7 @@ const textFieldWidth = 300.0;
 RegExp emailRegExp = RegExp(
     "^[a-zA-Z0-9.!#\$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*\$");
 RegExp loginRegExp = RegExp('[a-zA-Z0-9]');
+RegExp timeRegExp = RegExp('[0-9]{2}:[0-9]{2}');
 
 //Functions
 void snackBar(BuildContext context, String message,
