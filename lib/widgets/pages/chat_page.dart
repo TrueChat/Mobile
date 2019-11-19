@@ -10,6 +10,7 @@ import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/widgets/pages/edit_group_page.dart';
 import 'package:true_chat/storage/storage_manager.dart' as storage;
+import 'package:true_chat/widgets/pages/user_page.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({this.chat});
@@ -28,6 +29,10 @@ class _ChatPageState extends State<ChatPage> {
   bool _isLoading = true;
 
   String _errorMessage;
+
+  User _currentUser;
+
+  BuildContext _scaffoldContext;
 
   String _chatName() {
     if (_chat.isDialog) {
@@ -55,7 +60,7 @@ class _ChatPageState extends State<ChatPage> {
           radius: 20.0,
           initialsText: Text(
             _initText(),
-            style: TextStyle(fontSize: 30, color: Colors.white),
+            style: TextStyle(fontSize: 20, color: Colors.white),
           ),
           backgroundColor: constants.backgroundColor,
           borderColor: constants.appBarColor,
@@ -89,36 +94,41 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  Widget _dialogTitle() {
+    return Container();
+  }
+
   Chat _chat;
 
   @override
   void initState() {
     super.initState();
     _chat = widget.chat;
-    _initMessages();
+    _initData();
   }
 
-  Future<void> _initMessages() async {
+  Future<void> _initData() async {
     try {
-      await api.getMessages(id: _chat.id).then((messages){
+      _currentUser ??= await storage.getUser();
+      await api.getMessages(id: _chat.id).then((messages) {
         _messages = messages.reversed.toList();
-      }).whenComplete((){
-        if(mounted){
+      }).whenComplete(() {
+        if (mounted) {
           setState(() {
             _isLoading = false;
             _errorMessage = null;
           });
-          _initMessages();
+          _initData();
         }
       });
     } catch (e) {
-      if(e is api.ApiException){
+      if (e is api.ApiException) {
         final api.ApiException error = e;
         setState(() {
           _isLoading = false;
           _errorMessage = error.message;
         });
-      }else{
+      } else {
         setState(() {
           _isLoading = false;
           _errorMessage = constants.smthWentWrong;
@@ -135,30 +145,36 @@ class _ChatPageState extends State<ChatPage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context, _chat),
         ),
-        title: _chatTitle(),
+        title: _chat.isDialog ? _dialogTitle() : _chatTitle(),
         backgroundColor: constants.appBarColor,
         actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.info_outline),
-            onPressed: () async {
-              final Chat result = await Navigator.push(
-                context,
-                MaterialPageRoute<Chat>(
-                  builder: (context) => EditGroupPage(
-                    chat: _chat,
+          if (!_chat.isDialog)
+            IconButton(
+              icon: Icon(Icons.info_outline),
+              onPressed: () async {
+                final Chat result = await Navigator.push(
+                  context,
+                  MaterialPageRoute<Chat>(
+                    builder: (context) => EditGroupPage(
+                      chat: _chat,
+                    ),
                   ),
-                ),
-              );
-              if (result != null) {
-                setState(() {
-                  _chat = result;
-                });
-              }
-            },
-          ),
+                );
+                if (result != null) {
+                  setState(() {
+                    _chat = result;
+                  });
+                }
+              },
+            ),
         ],
       ),
-      body: _body(),
+      body: Builder(
+        builder: (context){
+          _scaffoldContext = context;
+          return _body();
+        },
+      ),
       backgroundColor: constants.backgroundColor,
     );
   }
@@ -175,17 +191,19 @@ class _ChatPageState extends State<ChatPage> {
             ),
           )
         else
-          _chatBody(),
+          Flexible(
+            child: _chatBody(),
+          ),
         _sendBar(),
       ],
     );
   }
 
   Widget _chatBody() {
-    return _errorMessage == null
-        ? Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ListView.separated(
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: _errorMessage == null
+          ? ListView.separated(
               shrinkWrap: true,
               itemBuilder: (context, index) {
                 return _messageItem(index);
@@ -194,16 +212,16 @@ class _ChatPageState extends State<ChatPage> {
                 return _messageSeparator(index);
               },
               itemCount: _messages.length,
-            ),
-          )
-        : Expanded(
-            child: Center(
-              child: Text(
-                _errorMessage,
-                style: Theme.of(context).textTheme.title,
+            )
+          : Expanded(
+              child: Center(
+                child: Text(
+                  _errorMessage,
+                  style: Theme.of(context).textTheme.title,
+                ),
               ),
             ),
-          );
+    );
   }
 
   Widget _messageSeparator(int index) {
@@ -219,176 +237,226 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _messageItem(int index) {
-    return FutureBuilder(
-      future: storage.getUser(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          final User user = snapshot.data;
-          final Message message = _messages[index];
+    final Message message = _messages[index];
 
-          final RegExpMatch match =
-              constants.timeRegExp.firstMatch(message.dateCreated);
-          String messageTime = match.input.substring(match.start, match.end);
-          int messageHours = int.parse(messageTime.substring(0, 2)) + 2;
-          String replace;
-          if (messageHours >= 24) {
-            messageHours -= 24;
-            replace = '0$messageHours';
-          } else {
-            replace = messageHours.toString();
-          }
+    final RegExpMatch match =
+        constants.timeRegExp.firstMatch(message.dateCreated);
+    String messageTime = match.input.substring(match.start, match.end);
+    int messageHours = int.parse(messageTime.substring(0, 2)) + 2;
+    String replace;
+    if (messageHours >= 24) {
+      messageHours -= 24;
+      replace = '0$messageHours';
+    } else {
+      replace = messageHours.toString();
+    }
 
-          messageTime = messageTime.replaceRange(0, 2, replace.toString());
+    messageTime = messageTime.replaceRange(0, 2, replace.toString());
 
-          Widget messageWidget;
-          if (message.user.id == user.id) {
-            messageWidget = Align(
-              alignment: Alignment.bottomRight,
+    Widget messageWidget;
+    if (message.user.id == _currentUser.id) {
+      messageWidget = GestureDetector(
+        onTap: () => _messagePressed(message),
+        child: Align(
+          alignment: Alignment.bottomRight,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 48.0),
+            child: Container(
+              decoration: BoxDecoration(
+                  color: constants.appBarColor.withOpacity(0.9),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12.0),
+                    bottomLeft: Radius.circular(12.0),
+                    bottomRight: Radius.circular(12.0),
+                  )),
               child: Padding(
-                padding: const EdgeInsets.only(left: 48.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                      color: constants.appBarColor.withOpacity(0.9),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(12.0),
-                        bottomLeft: Radius.circular(12.0),
-                        bottomRight: Radius.circular(12.0),
-                      )),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: <Widget>[
-                        Text(
-                          message.content,
-                          style: Theme.of(context).textTheme.body1,
-                        ),
-                        Text(
-                          messageTime,
-                          style: Theme.of(context)
-                              .textTheme
-                              .body1
-                              .copyWith(fontSize: 14.0),
-                        ),
-                      ],
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    Text(
+                      message.content,
+                      style: Theme.of(context).textTheme.body1,
                     ),
+                    Text(
+                      messageTime,
+                      style: Theme.of(context)
+                          .textTheme
+                          .body1
+                          .copyWith(fontSize: 14.0),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      bool isFirstMessage = true;
+      if (index - 1 >= 0) {
+        if (_messages[index].user.id == _messages[index - 1].user.id) {
+          isFirstMessage = false;
+        }
+      }
+      bool isLastMessage = false;
+      if (index + 1 < _messages.length) {
+        if (_messages[index].user.id != _messages[index + 1].user.id) {
+          isLastMessage = true;
+        }
+      } else {
+        isLastMessage = true;
+      }
+      String name = '';
+      String userInitText = '';
+      if (message.user.firstName.isNotEmpty) {
+        name += '${message.user.firstName} ';
+        userInitText += message.user.firstName[0].toUpperCase();
+      }
+      if (message.user.lastName.isNotEmpty) {
+        name += '${message.user.lastName}';
+        userInitText += message.user.lastName[0].toUpperCase();
+      }
+      if (name.isEmpty) {
+        name = message.user.username;
+        userInitText += message.user.username[0].toUpperCase();
+      }
+      messageWidget = Align(
+        alignment: Alignment.bottomLeft,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            if (isFirstMessage)
+              GestureDetector(
+                child: CircularProfileAvatar(
+                  '',
+                  radius: 20.0,
+                  initialsText: Text(
+                    userInitText,
+                    style: TextStyle(
+                        fontSize: userInitText.length == 1 ? 30 : 20,
+                        color: Colors.white),
+                  ),
+                  backgroundColor: constants.appBarColor,
+                  borderColor: constants.appBarColor,
+                ),
+                onTap: () {
+                  constants.goToPage(
+                    context,
+                    UserPage(
+                      username: message.user.username,
+                    ),
+                  );
+                },
+              ),
+            if (isFirstMessage)
+              const SizedBox(
+                width: 8.0,
+              ),
+            if (!isFirstMessage)
+              const SizedBox(
+                width: 48.0,
+              ),
+            Flexible(
+              child: Container(
+                decoration: BoxDecoration(
+                    color: constants.appBarColor.withOpacity(0.3),
+                    borderRadius: BorderRadius.only(
+                      topRight: const Radius.circular(12.0),
+                      bottomLeft: isLastMessage
+                          ? const Radius.circular(12.0)
+                          : Radius.zero,
+                      bottomRight: const Radius.circular(12.0),
+                    )),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      if (isFirstMessage)
+                        Text(
+                          name,
+                          style: Theme.of(context).textTheme.body1.copyWith(
+                                color: constants.accentColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: <Widget>[
+                          Text(
+                            message.content,
+                            style: Theme.of(context).textTheme.body1,
+                          ),
+                          Text(
+                            messageTime,
+                            style: Theme.of(context)
+                                .textTheme
+                                .body1
+                                .copyWith(fontSize: 14.0),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          } else {
-            bool isFirstMessage = true;
-            if (index - 1 >= 0) {
-              if (_messages[index].user.id == _messages[index - 1].user.id) {
-                isFirstMessage = false;
-              }
-            }
-            bool isLastMessage = false;
-            if (index + 1 < _messages.length) {
-              if (_messages[index].user.id != _messages[index + 1].user.id) {
-                isLastMessage = true;
-              }
-            } else {
-              isLastMessage = true;
-            }
-            String name = '';
-            String userInitText = '';
-            if (message.user.firstName.isNotEmpty) {
-              name += '${message.user.firstName} ';
-              userInitText += message.user.firstName[0].toUpperCase();
-            }
-            if (message.user.lastName.isNotEmpty) {
-              name += '${message.user.lastName}';
-              userInitText += message.user.lastName[0].toUpperCase();
-            }
-            if (name.isEmpty) {
-              name = message.user.username;
-              userInitText += message.user.username[0].toUpperCase();
-            }
-            messageWidget = Align(
-              alignment: Alignment.bottomLeft,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  if (isFirstMessage)
-                    CircularProfileAvatar(
-                      '',
-                      radius: 20.0,
-                      initialsText: Text(
-                        userInitText,
-                        style: TextStyle(
-                            fontSize: userInitText.length == 1 ? 30 : 20,
-                            color: Colors.white),
-                      ),
-                      backgroundColor: constants.appBarColor,
-                      borderColor: constants.appBarColor,
-                    ),
-                  if (isFirstMessage)
-                    const SizedBox(
-                      width: 8.0,
-                    ),
-                  if (!isFirstMessage)
-                    const SizedBox(
-                      width: 48.0,
-                    ),
-                  Flexible(
-                    child: Container(
-                      decoration: BoxDecoration(
-                          color: constants.appBarColor.withOpacity(0.3),
-                          borderRadius: BorderRadius.only(
-                            topRight: const Radius.circular(12.0),
-                            bottomLeft: isLastMessage
-                                ? const Radius.circular(12.0)
-                                : Radius.zero,
-                            bottomRight: const Radius.circular(12.0),
-                          )),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            if (isFirstMessage)
-                              Text(
-                                name,
-                                style:
-                                    Theme.of(context).textTheme.body1.copyWith(
-                                          color: constants.accentColor,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                              ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: <Widget>[
-                                Text(
-                                  message.content,
-                                  style: Theme.of(context).textTheme.body1,
-                                ),
-                                Text(
-                                  messageTime,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .body1
-                                      .copyWith(fontSize: 14.0),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 48.0,
-                  ),
-                ],
+            ),
+            const SizedBox(
+              width: 48.0,
+            ),
+          ],
+        ),
+      );
+    }
+    return messageWidget;
+  }
+
+  void _messagePressed(Message message) {
+    showDialog<void>(
+        context: context,
+        builder: (context) {
+          return SimpleDialog(
+            backgroundColor: constants.backgroundColor,
+            elevation: 0.0,
+            children: <Widget>[
+              SimpleDialogOption(
+                onPressed: () {
+                  _editMessage(message.id);
+                },
+                child: Text(
+                  'Edit',
+                  style: Theme.of(context).textTheme.body1,
+                ),
               ),
-            );
-          }
-          return messageWidget;
-        }
-        return Container();
-      },
-    );
+              SimpleDialogOption(
+                onPressed: () {
+                  _deleteMessage(message.id);
+                  Navigator.of(context).pop();
+                },
+                child: Text(
+                  'Delete',
+                  style: Theme.of(context).textTheme.body1.copyWith(
+                        color: Colors.red,
+                      ),
+                ),
+              ),
+            ],
+          );
+        });
+  }
+
+  Future<void> _deleteMessage(int id) async{
+    try{
+      await api.deleteMessage(id: id);
+    }catch (e){
+      final api.ApiException error = e;
+      constants.snackBar(_scaffoldContext, error.message);
+    }
+  }
+
+  void _editMessage(int id){
+
   }
 
   Widget _sendBar() {
@@ -426,7 +494,9 @@ class _ChatPageState extends State<ChatPage> {
           ),
           IconButton(
             icon: Icon(Icons.send),
-            onPressed: _sendMessagePressed,
+            onPressed: (){
+              _sendMessagePressed();
+            },
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
           ),
@@ -437,5 +507,13 @@ class _ChatPageState extends State<ChatPage> {
 
   void _attachFilePressed() {}
 
-  void _sendMessagePressed() {}
+  Future<void> _sendMessagePressed() async{
+    try{
+      await api.sendMessage(_messageController.text,_chat.id);
+      _messageController.clear();
+    }catch (e){
+      final api.ApiException error = e;
+      constants.snackBar(_scaffoldContext, error.message,Colors.red);
+    }
+  }
 }
