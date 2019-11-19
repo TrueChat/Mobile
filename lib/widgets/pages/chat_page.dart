@@ -13,9 +13,10 @@ import 'package:true_chat/storage/storage_manager.dart' as storage;
 import 'package:true_chat/widgets/pages/user_page.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({this.chat});
+  const ChatPage({this.chat,this.isChatCreated});
 
   final Chat chat;
+  final bool isChatCreated;
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -579,6 +580,9 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _sendPressed() async {
     try {
+      if(widget.isChatCreated != null){
+        _chat = await api.createDialog(username: _chat.users[0].username);
+      }
       if (_isEditing) {
         if (_messageController.text.isEmpty) {
           setState(() {

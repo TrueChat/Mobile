@@ -1,9 +1,11 @@
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/user_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/widgets/loading_screen.dart';
+import 'package:true_chat/widgets/pages/chat_page.dart';
 import 'package:true_chat/widgets/pages/user_settings_page.dart';
 import 'package:true_chat/api/api.dart' as api;
 import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
@@ -25,6 +27,8 @@ class _UserPageState extends State<UserPage> {
   User _user;
 
   bool _isOwner = false;
+
+  BuildContext _scaffoldContext;
 
   @override
   void initState() {
@@ -92,16 +96,52 @@ class _UserPageState extends State<UserPage> {
         ),
         backgroundColor: constants.appBarColor,
         actions: <Widget>[
-          if(_isOwner)
+          if (_isOwner)
             IconButton(
               icon: Icon(Icons.settings),
               onPressed: () => _goToSettingsPage(context),
             ),
         ],
       ),
-      body: _isLoading ? _loadingScreen : _body(),
+      body: Builder(builder: (context) {
+        _scaffoldContext = context;
+        return _isLoading ? _loadingScreen : _body();
+      }),
       backgroundColor: Theme.of(context).backgroundColor,
+      floatingActionButton: !_isOwner
+          ? FloatingActionButton(
+              onPressed: () {
+                _goToDialogPage();
+              },
+              child: Icon(Icons.message),
+            )
+          : null,
     );
+  }
+
+  Future<void> _goToDialogPage() async {
+    try {
+      Chat chat = await api.getDialog(username: _user.username);
+      bool isChatCreated;
+      if(chat == null){
+        chat = Chat(
+          creator: await storage_manager.getUser(),
+          users: <User>[_user],
+          isDialog: true,
+        );
+        isChatCreated = false;
+      }
+      constants.goToPage(
+        context,
+        ChatPage(
+          chat: chat,
+          isChatCreated: isChatCreated,
+        ),
+      );
+    } catch (e) {
+      final api.ApiException error = e;
+      constants.snackBar(_scaffoldContext, error.message);
+    }
   }
 
   String avatarText() {

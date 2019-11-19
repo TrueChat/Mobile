@@ -207,11 +207,24 @@ class _HomePageState extends State<HomePage> with RouteAware {
   Widget _chatItem(int index) {
     final chat = _chats[index];
     String initText = '';
-    final List<String> chatName = chat.name.split(' ');
-    if (chatName.length == 2) {
-      initText = '${chatName[0][0]}${chatName[1][0]}';
-    } else {
-      initText = '${chatName[0][0]}';
+    if(chat.isDialog){
+      final User user = chat.users[0];
+      if (user.firstName.isNotEmpty) {
+        initText += user.firstName[0];
+      }
+      if (user.lastName.isNotEmpty) {
+        initText += user.lastName[0];
+      }
+      if (initText.isEmpty) {
+        initText = user.username[0];
+      }
+    }else{
+      final List<String> chatName = chat.name.split(' ');
+      if (chatName.length == 2) {
+        initText = '${chatName[0][0]}${chatName[1][0]}';
+      } else {
+        initText = '${chatName[0][0]}';
+      }
     }
     return GestureDetector(
       onTap: () => _onChatItemPressed(index),

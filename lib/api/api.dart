@@ -53,7 +53,8 @@ String _messageEndpoint(int id) => 'chats/message/$id/';
 
 String _addMessageEndpoint(int chatId) => 'chats/$chatId/add_message/';
 
-String _privateChatEndpoint(String username) => 'chats/private_chats/$username/';
+String _privateChatEndpoint(String username) =>
+    'chats/private_chats/$username/';
 
 Map<String, String> _postHeaders = {
   'accept': 'application/json',
@@ -152,6 +153,43 @@ Future<Chat> getChat({@required int id}) async {
   throw ApiException(noConnectionMessage);
 }
 
+Future<Chat> getDialog({@required String username}) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final response = await http.get(
+      callUrl(_privateChatEndpoint(username)),
+      headers: _authHeader(accessToken),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> chatJson = json.decode(utf8Decode(response));
+      return Chat.fromJson(chatJson[0]);
+    }else{
+      return null;
+    }
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<Chat> createDialog({@required String username}) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final url = callUrl(_privateChatEndpoint(username));
+
+    final response = await http.post(url, headers: _authHeader(accessToken));
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> chatJson =
+      json.decode(utf8Decode(response));
+      return Chat.fromJson(chatJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
 Future<EditGroupResponse> editChat(
     {@required int id, String name, String description}) async {
   if (await checkConnection()) {
@@ -218,7 +256,7 @@ Future<Chat> kickMember({int chatId, String username}) async {
   throw ApiException(noConnectionMessage);
 }
 
-Future<Message> sendMessage(String message, int chatId) async{
+Future<Message> sendMessage(String message, int chatId) async {
   if (await checkConnection()) {
     final accessToken = await storage_manager.getAccessToken();
 
@@ -233,7 +271,8 @@ Future<Message> sendMessage(String message, int chatId) async{
     final response = await http.post(url, headers: _header, body: body);
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> messageJson = json.decode(utf8Decode(response));
+      final Map<String, dynamic> messageJson =
+          json.decode(utf8Decode(response));
       return Message.fromJson(messageJson);
     }
     throw ApiException(smthWentWrong);
@@ -241,7 +280,7 @@ Future<Message> sendMessage(String message, int chatId) async{
   throw ApiException(noConnectionMessage);
 }
 
-Future<void> deleteMessage({@required int id}) async{
+Future<void> deleteMessage({@required int id}) async {
   if (await checkConnection()) {
     final accessToken = await storage_manager.getAccessToken();
 
@@ -258,7 +297,7 @@ Future<void> deleteMessage({@required int id}) async{
   throw ApiException(noConnectionMessage);
 }
 
-Future<void> editMessage({@required int id, @required String message}) async{
+Future<void> editMessage({@required int id, @required String message}) async {
   if (await checkConnection()) {
     final accessToken = await storage_manager.getAccessToken();
 
@@ -322,7 +361,7 @@ Future<List<User>> searchUser({@required String query}) async {
   throw ApiException(noConnectionMessage);
 }
 
-Future<List<Message>> getMessages({@required int id}) async{
+Future<List<Message>> getMessages({@required int id}) async {
   if (await checkConnection()) {
     final accessToken = await storage_manager.getAccessToken();
 
@@ -333,8 +372,10 @@ Future<List<Message>> getMessages({@required int id}) async{
     if (response.statusCode == 200) {
       final List<dynamic> messagesJson = json.decode(utf8Decode(response));
       final List<Message> messages =
-      messagesJson.map((dynamic el) => Message.fromJson(el)).toList();
+          messagesJson.map((dynamic el) => Message.fromJson(el)).toList();
       return messages;
+    }else if(response.statusCode >= 300){
+      return <Message>[];
     }
     throw ApiException(smthWentWrong);
   }
