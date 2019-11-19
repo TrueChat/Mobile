@@ -108,7 +108,7 @@ class _UserPageState extends State<UserPage> {
         return _isLoading ? _loadingScreen : _body();
       }),
       backgroundColor: Theme.of(context).backgroundColor,
-      floatingActionButton: !_isOwner
+      floatingActionButton: (!_isOwner && !_isLoading)
           ? FloatingActionButton(
               onPressed: () {
                 _goToDialogPage();

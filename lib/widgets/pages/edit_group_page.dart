@@ -31,6 +31,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
   Chat _changedChat;
 
+  User _currentUser;
+
   BuildContext _scaffoldContext;
 
   String _initText = '';
@@ -41,11 +43,14 @@ class _EditGroupPageState extends State<EditGroupPage> {
     _chatNameController.text = widget.chat.name;
     _chatDescriptionController.text = widget.chat.description;
     _groupMembers = widget.chat.users;
+    if(_groupMembers[0].id != widget.chat.creator.id){
+      _groupMembers.insert(0, widget.chat.creator);
+    }
   }
 
   Future<bool> _checkYourChat() async {
-    final User current = await storage_manager.getUser();
-    return current.id == widget.chat.creator.id;
+    _currentUser = await storage_manager.getUser();
+    return _currentUser.id == widget.chat.creator.id;
   }
 
   @override
@@ -55,7 +60,9 @@ class _EditGroupPageState extends State<EditGroupPage> {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context, _changedChat),
+          onPressed: (){
+            Navigator.pop(context, _changedChat);
+          },
         ),
         title: Text(
           constants.editGroupPageTitle,
@@ -150,28 +157,31 @@ class _EditGroupPageState extends State<EditGroupPage> {
                                   style: Theme.of(context).textTheme.body1,
                                 ),
                               ),
-                              if(!_isYourChat)
+                              if (!_isYourChat)
                                 GestureDetector(
                                   child: Text(
                                     'Leave',
-                                    style:
-                                    Theme.of(context).textTheme.body1.copyWith(
-                                      color: Colors.red,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .body1
+                                        .copyWith(
+                                          color: Colors.red,
+                                        ),
                                   ),
-                                  onTap: (){
+                                  onTap: () {
                                     _leaveGroupPressed();
                                   },
                                 ),
-                              const SizedBox(width: 16.0,),
-                              if (_isYourChat)
-                                GestureDetector(
-                                  child: Text(
-                                    'Add',
-                                    style: Theme.of(context).textTheme.body1,
-                                  ),
-                                  onTap: _onAddMembersPressed,
+                              const SizedBox(
+                                width: 16.0,
+                              ),
+                              GestureDetector(
+                                child: Text(
+                                  'Add',
+                                  style: Theme.of(context).textTheme.body1,
                                 ),
+                                onTap: _onAddMembersPressed,
+                              ),
                             ],
                           ),
                         ),
@@ -235,7 +245,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
         });
   }
 
-  Future<void> _leaveGroupPressed() async{
+  Future<void> _leaveGroupPressed() async {
     showDialog<void>(
         context: context,
         builder: (context) {
@@ -264,7 +274,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
                         'Yes',
                         style: Theme.of(context).textTheme.body1,
                       ),
-                      onPressed: () async{
+                      onPressed: () async {
                         Navigator.of(context).pop();
                         await _leaveGroup();
                       },
@@ -292,23 +302,23 @@ class _EditGroupPageState extends State<EditGroupPage> {
         });
   }
 
-  Future<void> _leaveGroup() async{
-     try{
-       setState(() {
-         _isLoading = true;
-       });
-       await api.leaveGroup(groupId: widget.chat.id);
-       setState(() {
-         _isLoading = false;
-       });
-       Navigator.of(context).pop();
-     }catch (e){
-       setState(() {
-         _isLoading = false;
-       });
-       final api.ApiException error = e;
-       constants.snackBar(_scaffoldContext, error.message,Colors.red);
-     }
+  Future<void> _leaveGroup() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      await api.leaveGroup(groupId: widget.chat.id);
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.of(context).pop();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      final api.ApiException error = e;
+      constants.snackBar(_scaffoldContext, error.message, Colors.red);
+    }
   }
 
   Future<void> _submitPressed() async {
@@ -397,51 +407,78 @@ class _EditGroupPageState extends State<EditGroupPage> {
       initText = 'NS';
     }
 
+    final String name =
+        '${user.firstName.isEmpty ? 'Name' : user.firstName} ${user.lastName.isEmpty ? 'Surname' : user.lastName}';
     return Container(
       padding: const EdgeInsets.all(8.0),
       color: constants.containerColor,
-      child: Row(
-        children: <Widget>[
-          CircularProfileAvatar(
-            initText,
-            radius: 30.0,
-            initialsText: Text(
+      child: GestureDetector(
+        onTap: () {
+          constants.goToPage(
+            context,
+            UserPage(
+              username: _groupMembers[index].username,
+            ),
+          );
+        },
+        child: Row(
+          children: <Widget>[
+            CircularProfileAvatar(
               initText,
-              style: TextStyle(fontSize: 30, color: Colors.white),
+              radius: 30.0,
+              initialsText: Text(
+                initText,
+                style: TextStyle(fontSize: 30, color: Colors.white),
+              ),
+              backgroundColor: constants.appBarColor,
+              borderColor: constants.appBarColor,
             ),
-            backgroundColor: constants.appBarColor,
-            borderColor: constants.appBarColor,
-          ),
-          const SizedBox(
-            width: 10.0,
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  '${user.firstName.isEmpty ? 'Name' : user.firstName} ${user.lastName.isEmpty ? 'Surname' : user.lastName}',
-                  style: Theme.of(context).textTheme.body1.copyWith(
-                        color: Colors.white,
+            const SizedBox(
+              width: 10.0,
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        name,
+                        style: Theme.of(context).textTheme.body1.copyWith(
+                              color: Colors.white,
+                            ),
                       ),
-                ),
-                const SizedBox(
-                  height: 10.0,
-                ),
-                Text(
-                  '@${user.username}',
-                  style: Theme.of(context).textTheme.body1,
-                ),
-              ],
+                      const SizedBox(width: 8.0,),
+                      if(index == 0)
+                        Text(
+                          'admin',
+                          style: Theme.of(context).textTheme.body1.copyWith(
+                              color: constants.fontColor,
+                              fontSize: 16.0
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                  Text(
+                    '@${user.username}',
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                ],
+              ),
             ),
-          ),
-          _popupMenuButton(index),
-        ],
+            _popupMenuButton(index),
+          ],
+        ),
       ),
     );
   }
 
   Widget _popupMenuButton(int index) {
+    final User user = _groupMembers[index];
     return Theme(
       data: Theme.of(context).copyWith(
         cardColor: constants.containerColor,
@@ -461,7 +498,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
               ),
             ),
           ),
-          if (_isYourChat)
+          if (_isYourChat && user.id != _currentUser.id)
             custom_popup.PopupMenuItem(
               value: 1,
               child: Center(
@@ -471,7 +508,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
                 ),
               ),
             ),
-          if (_isYourChat)
+          if (_isYourChat && user.id != _currentUser.id)
             custom_popup.PopupMenuItem(
               value: 2,
               child: Center(
@@ -622,6 +659,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
     if (result != null) {
       setState(() {
         _groupMembers = result;
+        _groupMembers.insert(0, widget.chat.creator);
       });
     }
   }

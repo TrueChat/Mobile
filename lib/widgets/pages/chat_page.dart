@@ -13,7 +13,7 @@ import 'package:true_chat/storage/storage_manager.dart' as storage;
 import 'package:true_chat/widgets/pages/user_page.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({this.chat,this.isChatCreated});
+  const ChatPage({this.chat, this.isChatCreated});
 
   final Chat chat;
   final bool isChatCreated;
@@ -29,25 +29,23 @@ class _ChatPageState extends State<ChatPage> {
 
   bool _isLoading = true;
 
+  Chat _chat;
+
   String _errorMessage;
 
   User _currentUser;
+
+  final ScrollController _scrollController = ScrollController();
 
   BuildContext _scaffoldContext;
 
   bool _isEditing = false;
 
-  String _chatName() {
-    if (_chat.isDialog) {
-      return '${_chat.name} - dialog';
-    }
-    return _chat.name;
-  }
-
   String _initText() {
     String initText = '';
     if (_chat.isDialog) {
-      final User user = _chat.users[0];
+      final User user =
+          _chat.users[0].id == _currentUser.id ? _chat.creator : _chat.users[0];
       if (user.firstName.isNotEmpty) {
         initText += user.firstName[0];
       }
@@ -69,44 +67,54 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _chatTitle() {
-    return Row(
-      children: <Widget>[
-        CircularProfileAvatar(
-          '',
-          radius: 20.0,
-          initialsText: Text(
-            _initText(),
-            style: TextStyle(fontSize: 20, color: Colors.white),
+    return GestureDetector(
+      onTap: () {
+        constants.goToPage(
+          context,
+          EditGroupPage(
+            chat: _chat,
           ),
-          backgroundColor: constants.backgroundColor,
-          borderColor: constants.appBarColor,
-        ),
-        const SizedBox(
-          width: 16.0,
-        ),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                _chatName(),
-                style: Theme.of(context).textTheme.body1.copyWith(
-                      color: constants.fontColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              Text(
-                '${_chat.users.length} members',
-                style: Theme.of(context)
-                    .textTheme
-                    .body1
-                    .copyWith(color: constants.fontColor),
-              ),
-            ],
+        );
+      },
+      child: Row(
+        children: <Widget>[
+          CircularProfileAvatar(
+            '',
+            radius: 20.0,
+            initialsText: Text(
+              _initText(),
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ),
+            backgroundColor: constants.backgroundColor,
+            borderColor: constants.appBarColor,
           ),
-        ),
-      ],
+          const SizedBox(
+            width: 16.0,
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  _chat.name,
+                  style: Theme.of(context).textTheme.body1.copyWith(
+                        color: constants.fontColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                Text(
+                  '${_chat.users.length} members',
+                  style: Theme.of(context)
+                      .textTheme
+                      .body1
+                      .copyWith(color: constants.fontColor),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -116,7 +124,9 @@ class _ChatPageState extends State<ChatPage> {
         constants.goToPage(
           context,
           UserPage(
-            username: _chat.users[0].username,
+            username: _chat.users[0].id == _currentUser.id
+                ? _chat.creator.username
+                : _chat.users[0].username,
           ),
         );
       },
@@ -147,25 +157,37 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Chat _chat;
-
   @override
   void initState() {
     super.initState();
     _chat = widget.chat;
     _initData();
+    _currentUser = _chat.creator;
+    storage.getUser().then((user) {
+      setState(() {
+        _currentUser = user;
+      });
+    });
   }
 
   Future<void> _initData() async {
     try {
-      _currentUser ??= await storage.getUser();
       await api.getMessages(id: _chat.id).then((messages) {
-        _messages = messages.reversed.toList();
+        int length = -1;
+        if (_messages != null) {
+          length = _messages.length;
+        }
+        _messages = messages;
+        if (_messages.length > length) {
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(0.0);
+          }
+        }
+        _errorMessage = null;
       }).whenComplete(() {
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _errorMessage = null;
           });
           _initData();
         }
@@ -180,7 +202,7 @@ class _ChatPageState extends State<ChatPage> {
       } else {
         setState(() {
           _isLoading = false;
-          _errorMessage = constants.smthWentWrong;
+          _errorMessage = e.toString();
         });
       }
     }
@@ -240,20 +262,20 @@ class _ChatPageState extends State<ChatPage> {
             ),
           )
         else
-          Flexible(
-            child: _chatBody(),
-          ),
+          _chatBody(),
         _sendBar(),
       ],
     );
   }
 
   Widget _chatBody() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+    return Flexible(
       child: _errorMessage == null
           ? ListView.separated(
+              padding: const EdgeInsets.all(8.0),
               shrinkWrap: true,
+              reverse: true,
+              controller: _scrollController,
               itemBuilder: (context, index) {
                 return _messageItem(index);
               },
@@ -262,12 +284,10 @@ class _ChatPageState extends State<ChatPage> {
               },
               itemCount: _messages.length,
             )
-          : Expanded(
-              child: Center(
-                child: Text(
-                  _errorMessage,
-                  style: Theme.of(context).textTheme.title,
-                ),
+          : Center(
+              child: Text(
+                _errorMessage,
+                style: Theme.of(context).textTheme.title,
               ),
             ),
     );
@@ -287,7 +307,8 @@ class _ChatPageState extends State<ChatPage> {
 
   String _dialogName(Chat chat) {
     String name = '';
-    final User user = chat.users[0];
+    final User user =
+        chat.users[0].id == _currentUser.id ? _chat.creator : chat.users[0];
     if (user.firstName.isNotEmpty) {
       name += '${user.firstName} ';
     }
@@ -390,7 +411,7 @@ class _ChatPageState extends State<ChatPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            if (isFirstMessage && !_chat.isDialog)
+            if (isLastMessage && !_chat.isDialog)
               GestureDetector(
                 child: CircularProfileAvatar(
                   '',
@@ -413,11 +434,11 @@ class _ChatPageState extends State<ChatPage> {
                   );
                 },
               ),
-            if (isFirstMessage && !_chat.isDialog)
+            if (isLastMessage && !_chat.isDialog)
               const SizedBox(
                 width: 8.0,
               ),
-            if (!isFirstMessage && !_chat.isDialog)
+            if (!isLastMessage && !_chat.isDialog)
               const SizedBox(
                 width: 48.0,
               ),
@@ -427,7 +448,7 @@ class _ChatPageState extends State<ChatPage> {
                     color: constants.appBarColor.withOpacity(0.3),
                     borderRadius: BorderRadius.only(
                       topRight: const Radius.circular(12.0),
-                      bottomLeft: isLastMessage
+                      bottomLeft: isFirstMessage
                           ? const Radius.circular(12.0)
                           : Radius.zero,
                       bottomRight: const Radius.circular(12.0),
@@ -437,7 +458,7 @@ class _ChatPageState extends State<ChatPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      if (isFirstMessage && !_chat.isDialog)
+                      if (isLastMessage && !_chat.isDialog)
                         Text(
                           name,
                           style: Theme.of(context).textTheme.body1.copyWith(
@@ -580,7 +601,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _sendPressed() async {
     try {
-      if(widget.isChatCreated != null){
+      if (widget.isChatCreated != null) {
         _chat = await api.createDialog(username: _chat.users[0].username);
       }
       if (_isEditing) {

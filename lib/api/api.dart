@@ -47,7 +47,7 @@ String _banMemberEndpoint(int chatId, String username) =>
 String _deleteMemberEndpoint(int chatId, String username) =>
     'chats/$chatId/delete_member/$username/';
 
-String _leaveGroupEndpoint(int groupId) => 'chats/$groupId/delete_member/';
+String _leaveChatEndpoint(int groupId) => 'chats/$groupId/delete_member/';
 
 String _messageEndpoint(int id) => 'chats/message/$id/';
 
@@ -329,7 +329,7 @@ Future<Chat> leaveGroup({int groupId}) async {
     final accessToken = await storage_manager.getAccessToken();
 
     final response = await http.delete(
-      callUrl(_leaveGroupEndpoint(groupId)),
+      callUrl(_leaveChatEndpoint(groupId)),
       headers: _authHeader(accessToken),
     );
 

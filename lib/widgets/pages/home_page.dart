@@ -28,6 +28,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
   String _firstName = 'N';
   String _lastName = 'S';
+  User _user;
 
   List<Chat> _chats = [];
 
@@ -114,18 +115,19 @@ class _HomePageState extends State<HomePage> with RouteAware {
   }
 
   Future<void> _initUserData() async {
-    final User user = await storage_manager.getUser();
+    _user = await storage_manager.getUser();
     setState(() {
-      _firstName =
-          user.firstName == null || user.firstName == '' ? 'N' : user.firstName;
+      _firstName = _user.firstName == null || _user.firstName == ''
+          ? 'N'
+          : _user.firstName;
       _lastName =
-          user.lastName == null || user.lastName == '' ? 'S' : user.lastName;
+          _user.lastName == null || _user.lastName == '' ? 'S' : _user.lastName;
     });
-    if (user.firstName.isEmpty || user.lastName.isEmpty) {
+    if (_user.firstName.isEmpty || _user.lastName.isEmpty) {
       final bool result = await Navigator.push(
           context,
           MaterialPageRoute<bool>(
-              builder: (context) => UserSettingsPage(user: user)));
+              builder: (context) => UserSettingsPage(user: _user)));
       if (result) {
         _initUserData();
       }
@@ -134,9 +136,11 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
   Future<void> _initChats() async {
     try {
-      final ChatsResponse response = await api.fetchChats(1);
-      setState(() {
-        _chats = response.results;
+      await api.fetchChats(1).then((result) {
+        setState(() {
+          _chats = result.results;
+        });
+        _initChats();
       });
     } catch (e) {
       final api.ApiException error = e;
@@ -189,9 +193,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
     }
   }
 
-  String _chatName(Chat chat){
+  String _chatName(Chat chat) {
     String name = '';
-    final User user = chat.users[0];
+    final User user =
+        chat.users[0].id == _user.id ? chat.creator : chat.users[0];
     if (user.firstName.isNotEmpty) {
       name += '${user.firstName} ';
     }
@@ -207,18 +212,14 @@ class _HomePageState extends State<HomePage> with RouteAware {
   Widget _chatItem(int index) {
     final chat = _chats[index];
     String initText = '';
-    if(chat.isDialog){
-      final User user = chat.users[0];
-      if (user.firstName.isNotEmpty) {
-        initText += user.firstName[0];
+    if (chat.isDialog) {
+      final List<String> chatName = _chatName(chat).split(' ');
+      if (chatName.length == 2) {
+        initText = '${chatName[0][0]}${chatName[1][0]}';
+      } else {
+        initText = '${chatName[0][0]}';
       }
-      if (user.lastName.isNotEmpty) {
-        initText += user.lastName[0];
-      }
-      if (initText.isEmpty) {
-        initText = user.username[0];
-      }
-    }else{
+    } else {
       final List<String> chatName = chat.name.split(' ');
       if (chatName.length == 2) {
         initText = '${chatName[0][0]}${chatName[1][0]}';
@@ -411,14 +412,66 @@ class _HomePageState extends State<HomePage> with RouteAware {
   }
 
   Future<void> _logout() async {
-    api.logout().then((response) {
-      if (response != null && !response.isError) {
-        Navigator.of(context).pushAndRemoveUntil<void>(
-            MaterialPageRoute(builder: (context) => LogInPage()),
-            (Route<dynamic> route) => false);
-      } else {
-        constants.snackBar(_scaffoldContext, response.message, Colors.red);
-      }
+    showDialog<void>(context: context,builder: (context){
+      return AlertDialog(
+        titlePadding: EdgeInsets.zero,
+        contentPadding: EdgeInsets.zero,
+        backgroundColor: constants.backgroundColor,
+        title: Container(
+          color: constants.containerColor,
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            'Are you sure you want to log out?',
+            style: Theme.of(context).textTheme.title,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              Expanded(
+                child: RaisedButton(
+                  color: constants.containerColor,
+                  child: Text(
+                    'Yes',
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                  onPressed: () {
+                    api.logout().then((response) {
+                      if (response != null && !response.isError) {
+                        Navigator.of(context).pushAndRemoveUntil<void>(
+                            MaterialPageRoute(builder: (context) => LogInPage()),
+                                (Route<dynamic> route) => false);
+                      } else {
+                        constants.snackBar(_scaffoldContext, response.message, Colors.red);
+                      }
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+              const SizedBox(
+                width: 8.0,
+              ),
+              Expanded(
+                child: RaisedButton(
+                  color: constants.containerColor,
+                  child: Text(
+                    'No',
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              )
+            ],
+          ),
+        ),
+      );
     });
+
   }
 }
