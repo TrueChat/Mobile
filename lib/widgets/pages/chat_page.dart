@@ -45,11 +45,24 @@ class _ChatPageState extends State<ChatPage> {
 
   String _initText() {
     String initText = '';
-    final List<String> chatName = _chat.name.split(' ');
-    if (chatName.length == 2) {
-      initText = '${chatName[0][0]}${chatName[1][0]}';
+    if (_chat.isDialog) {
+      final User user = _chat.users[0];
+      if (user.firstName.isNotEmpty) {
+        initText += user.firstName[0];
+      }
+      if (user.lastName.isNotEmpty) {
+        initText += user.lastName[0];
+      }
+      if (initText.isEmpty) {
+        initText = user.username[0];
+      }
     } else {
-      initText = '${chatName[0][0]}';
+      final List<String> chatName = _chat.name.split(' ');
+      if (chatName.length == 2) {
+        initText = '${chatName[0][0]}${chatName[1][0]}';
+      } else {
+        initText = '${chatName[0][0]}';
+      }
     }
     return initText.toUpperCase();
   }
@@ -97,7 +110,40 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _dialogTitle() {
-    return Container();
+    return GestureDetector(
+      onTap: () {
+        constants.goToPage(
+          context,
+          UserPage(
+            username: _chat.users[0].username,
+          ),
+        );
+      },
+      child: Row(
+        children: <Widget>[
+          CircularProfileAvatar(
+            '',
+            radius: 20.0,
+            initialsText: Text(
+              _initText(),
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ),
+            backgroundColor: constants.backgroundColor,
+            borderColor: constants.appBarColor,
+          ),
+          const SizedBox(
+            width: 16.0,
+          ),
+          Text(
+            _dialogName(_chat),
+            style: Theme.of(context).textTheme.body1.copyWith(
+                  color: constants.fontColor,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ],
+      ),
+    );
   }
 
   Chat _chat;
@@ -172,7 +218,7 @@ class _ChatPageState extends State<ChatPage> {
         ],
       ),
       body: Builder(
-        builder: (context){
+        builder: (context) {
           _scaffoldContext = context;
           return _body();
         },
@@ -236,6 +282,21 @@ class _ChatPageState extends State<ChatPage> {
     return SizedBox(
       height: height,
     );
+  }
+
+  String _dialogName(Chat chat) {
+    String name = '';
+    final User user = chat.users[0];
+    if (user.firstName.isNotEmpty) {
+      name += '${user.firstName} ';
+    }
+    if (user.lastName.isNotEmpty) {
+      name += '${user.lastName}';
+    }
+    if (name.isEmpty) {
+      name = user.username;
+    }
+    return name;
   }
 
   Widget _messageItem(int index) {
@@ -328,7 +389,7 @@ class _ChatPageState extends State<ChatPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            if (isFirstMessage)
+            if (isFirstMessage && !_chat.isDialog)
               GestureDetector(
                 child: CircularProfileAvatar(
                   '',
@@ -351,11 +412,11 @@ class _ChatPageState extends State<ChatPage> {
                   );
                 },
               ),
-            if (isFirstMessage)
+            if (isFirstMessage && !_chat.isDialog)
               const SizedBox(
                 width: 8.0,
               ),
-            if (!isFirstMessage)
+            if (!isFirstMessage && !_chat.isDialog)
               const SizedBox(
                 width: 48.0,
               ),
@@ -375,7 +436,7 @@ class _ChatPageState extends State<ChatPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      if (isFirstMessage)
+                      if (isFirstMessage && !_chat.isDialog)
                         Text(
                           name,
                           style: Theme.of(context).textTheme.body1.copyWith(
@@ -448,10 +509,10 @@ class _ChatPageState extends State<ChatPage> {
         });
   }
 
-  Future<void> _deleteMessage(int id) async{
-    try{
+  Future<void> _deleteMessage(int id) async {
+    try {
       await api.deleteMessage(id: id);
-    }catch (e){
+    } catch (e) {
       final api.ApiException error = e;
       constants.snackBar(_scaffoldContext, error.message);
     }
@@ -459,7 +520,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Message _messageToEdit;
 
-  void _editMessage(Message message){
+  void _editMessage(Message message) {
     _messageController.text = message.content;
     Navigator.of(context).pop();
     setState(() {
@@ -503,7 +564,7 @@ class _ChatPageState extends State<ChatPage> {
           ),
           IconButton(
             icon: _isEditing ? Icon(Icons.done) : Icon(Icons.send),
-            onPressed: (){
+            onPressed: () {
               _sendPressed();
             },
             splashColor: Colors.transparent,
@@ -516,29 +577,30 @@ class _ChatPageState extends State<ChatPage> {
 
   void _attachFilePressed() {}
 
-  Future<void> _sendPressed() async{
-    try{
-      if(_isEditing){
-        if(_messageController.text.isEmpty){
+  Future<void> _sendPressed() async {
+    try {
+      if (_isEditing) {
+        if (_messageController.text.isEmpty) {
           setState(() {
             _isEditing = false;
           });
           return;
         }
-        await api.editMessage(id: _messageToEdit.id, message: _messageController.text);
+        await api.editMessage(
+            id: _messageToEdit.id, message: _messageController.text);
         setState(() {
           _isEditing = false;
         });
-      }else{
-        await api.sendMessage(_messageController.text,_chat.id);
+      } else {
+        await api.sendMessage(_messageController.text, _chat.id);
       }
       _messageController.clear();
-    }catch (e){
-      if(e is api.ApiException){
+    } catch (e) {
+      if (e is api.ApiException) {
         final api.ApiException error = e;
-        constants.snackBar(_scaffoldContext, error.message,Colors.red);
-      }else{
-        constants.snackBar(_scaffoldContext, e.toString(),Colors.red);
+        constants.snackBar(_scaffoldContext, error.message, Colors.red);
+      } else {
+        constants.snackBar(_scaffoldContext, e.toString(), Colors.red);
       }
     }
   }

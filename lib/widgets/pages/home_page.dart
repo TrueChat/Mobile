@@ -122,8 +122,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
           user.lastName == null || user.lastName == '' ? 'S' : user.lastName;
     });
     if (user.firstName.isEmpty || user.lastName.isEmpty) {
-      final bool result = await Navigator.push(context,
-          MaterialPageRoute<bool>(builder: (context) => UserSettingsPage(user: user)));
+      final bool result = await Navigator.push(
+          context,
+          MaterialPageRoute<bool>(
+              builder: (context) => UserSettingsPage(user: user)));
       if (result) {
         _initUserData();
       }
@@ -187,6 +189,21 @@ class _HomePageState extends State<HomePage> with RouteAware {
     }
   }
 
+  String _chatName(Chat chat){
+    String name = '';
+    final User user = chat.users[0];
+    if (user.firstName.isNotEmpty) {
+      name += '${user.firstName} ';
+    }
+    if (user.lastName.isNotEmpty) {
+      name += '${user.lastName}';
+    }
+    if (name.isEmpty) {
+      name = user.username;
+    }
+    return name;
+  }
+
   Widget _chatItem(int index) {
     final chat = _chats[index];
     String initText = '';
@@ -217,32 +234,34 @@ class _HomePageState extends State<HomePage> with RouteAware {
               width: 10.0,
             ),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Flexible(
-                        child: Text(
+              child: chat.isDialog
+                  ? Text(
+                      _chatName(chat),
+                      style: Theme.of(context).textTheme.body1.copyWith(
+                            color: Colors.white,
+                          ),
+                      maxLines: 2,
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
                           chat.name,
                           style: Theme.of(context).textTheme.body1.copyWith(
                                 color: Colors.white,
                               ),
                           maxLines: 2,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 10.0,
-                  ),
-                  Text(
-                    chat.description,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.body1,
-                  ),
-                ],
-              ),
+                        const SizedBox(
+                          height: 10.0,
+                        ),
+                        Text(
+                          chat.description ?? '',
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.body1,
+                        ),
+                      ],
+                    ),
             ),
           ],
         ),

@@ -53,6 +53,8 @@ String _messageEndpoint(int id) => 'chats/message/$id/';
 
 String _addMessageEndpoint(int chatId) => 'chats/$chatId/add_message/';
 
+String _privateChatEndpoint(String username) => 'chats/private_chats/$username/';
+
 Map<String, String> _postHeaders = {
   'accept': 'application/json',
   'Content-Type': 'application/json; charset=utf-8',
