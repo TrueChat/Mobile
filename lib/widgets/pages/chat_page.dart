@@ -34,6 +34,8 @@ class _ChatPageState extends State<ChatPage> {
 
   BuildContext _scaffoldContext;
 
+  bool _isEditing = false;
+
   String _chatName() {
     if (_chat.isDialog) {
       return '${_chat.name} - dialog';
@@ -422,7 +424,7 @@ class _ChatPageState extends State<ChatPage> {
             children: <Widget>[
               SimpleDialogOption(
                 onPressed: () {
-                  _editMessage(message.id);
+                  _editMessage(message);
                 },
                 child: Text(
                   'Edit',
@@ -455,8 +457,15 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  void _editMessage(int id){
+  Message _messageToEdit;
 
+  void _editMessage(Message message){
+    _messageController.text = message.content;
+    Navigator.of(context).pop();
+    setState(() {
+      _isEditing = true;
+    });
+    _messageToEdit = message;
   }
 
   Widget _sendBar() {
@@ -485,7 +494,7 @@ class _ChatPageState extends State<ChatPage> {
                   ),
               cursorColor: constants.fontColor,
               onSubmitted: (query) {
-                _sendMessagePressed();
+                _sendPressed();
               },
             ),
           ),
@@ -493,9 +502,9 @@ class _ChatPageState extends State<ChatPage> {
             width: 8.0,
           ),
           IconButton(
-            icon: Icon(Icons.send),
+            icon: _isEditing ? Icon(Icons.done) : Icon(Icons.send),
             onPressed: (){
-              _sendMessagePressed();
+              _sendPressed();
             },
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
@@ -507,13 +516,30 @@ class _ChatPageState extends State<ChatPage> {
 
   void _attachFilePressed() {}
 
-  Future<void> _sendMessagePressed() async{
+  Future<void> _sendPressed() async{
     try{
-      await api.sendMessage(_messageController.text,_chat.id);
+      if(_isEditing){
+        if(_messageController.text.isEmpty){
+          setState(() {
+            _isEditing = false;
+          });
+          return;
+        }
+        await api.editMessage(id: _messageToEdit.id, message: _messageController.text);
+        setState(() {
+          _isEditing = false;
+        });
+      }else{
+        await api.sendMessage(_messageController.text,_chat.id);
+      }
       _messageController.clear();
     }catch (e){
-      final api.ApiException error = e;
-      constants.snackBar(_scaffoldContext, error.message,Colors.red);
+      if(e is api.ApiException){
+        final api.ApiException error = e;
+        constants.snackBar(_scaffoldContext, error.message,Colors.red);
+      }else{
+        constants.snackBar(_scaffoldContext, e.toString(),Colors.red);
+      }
     }
   }
 }

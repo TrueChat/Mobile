@@ -49,7 +49,7 @@ String _deleteMemberEndpoint(int chatId, String username) =>
 
 String _leaveGroupEndpoint(int groupId) => 'chats/$groupId/delete_member/';
 
-String _deleteMessageEndpoint(int id) => 'chats/message/$id/';
+String _messageEndpoint(int id) => 'chats/message/$id/';
 
 String _addMessageEndpoint(int chatId) => 'chats/$chatId/add_message/';
 
@@ -244,11 +244,38 @@ Future<void> deleteMessage({@required int id}) async{
     final accessToken = await storage_manager.getAccessToken();
 
     final response = await http.delete(
-      callUrl(_deleteMessageEndpoint(id)),
+      callUrl(_messageEndpoint(id)),
       headers: _authHeader(accessToken),
     );
 
     if (response.statusCode >= 200 && response.statusCode <= 300) {
+      return;
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<void> editMessage({@required int id, @required String message}) async{
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final data = <String, String>{
+      'content': message,
+    };
+
+    final body = json.encode(data);
+
+    final Map<String, String> _header = _postHeaders;
+    _header.addAll(_authHeader(accessToken));
+
+    final response = await http.put(
+      callUrl(_messageEndpoint(id)),
+      headers: _header,
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
       return;
     }
     throw ApiException(smthWentWrong);
