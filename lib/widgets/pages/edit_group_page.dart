@@ -428,7 +428,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
               radius: 30.0,
               initialsText: Text(
                 initText,
-                style: TextStyle(fontSize: 30, color: Colors.white),
+                style: TextStyle(fontSize: 25, color: Colors.white),
               ),
               backgroundColor: constants.appBarColor,
               borderColor: constants.appBarColor,
@@ -440,25 +440,11 @@ class _EditGroupPageState extends State<EditGroupPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(
-                        name,
-                        style: Theme.of(context).textTheme.body1.copyWith(
-                              color: Colors.white,
-                            ),
-                      ),
-                      const SizedBox(width: 8.0,),
-                      if(index == 0)
-                        Text(
-                          'admin',
-                          style: Theme.of(context).textTheme.body1.copyWith(
-                              color: constants.fontColor,
-                              fontSize: 16.0
-                          ),
+                  Text(
+                    name,
+                    style: Theme.of(context).textTheme.body1.copyWith(
+                          color: Colors.white,
                         ),
-                    ],
                   ),
                   const SizedBox(
                     height: 10.0,

@@ -110,41 +110,41 @@ class _SearchMembersPageState extends State<SearchMembersPage> {
     );
   }
 
-  Widget _isFoundWidget() => _addUsersList.isEmpty
-      ? Text(
-          _notFoundMessage,
-          style: Theme.of(context).textTheme.title,
-        )
-      : ListView.separated(
-          separatorBuilder: (context, index) => const SizedBox(
-            height: 8.0,
-          ),
-          itemBuilder: (context, index) {
-            return _memberToAddItem(index);
-          },
-          itemCount: _addUsersList.length,
-          shrinkWrap: true,
-          physics: const ClampingScrollPhysics(),
-        );
+  Widget _isFoundWidget() {
+    return _addUsersList.isEmpty
+        ? Text(
+            _notFoundMessage,
+            style: Theme.of(context).textTheme.title,
+          )
+        : ListView.separated(
+            separatorBuilder: (context, index) => const SizedBox(
+              height: 8.0,
+            ),
+            itemBuilder: (context, index) {
+              return _memberToAddItem(index);
+            },
+            itemCount: _addUsersList.length,
+            shrinkWrap: true,
+            physics: const ClampingScrollPhysics(),
+          );
+  }
 
   Future<void> _onSearchStringChanged(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        _notFoundMessage = '';
-      });
-    } else {
+    final String result = query.trim();
+    if (result.isNotEmpty) {
       try {
         _addUsersList = await api.searchUser(query: query);
-        if(widget.chat != null){
+        if (widget.chat != null) {
           for (User u in _addUsersList) {
-            if (_isUserInList(u, _addedUsers) || widget.chat.creator.id == u.id) {
+            if (_isUserInList(u, _addedUsers) ||
+                widget.chat.creator.id == u.id) {
               _addUsersList.remove(u);
             }
           }
         }
         setState(() {
           if (_addUsersList.isEmpty) {
-            _notFoundMessage = '$query not found';
+            _notFoundMessage = '$result not found';
           }
         });
       } catch (e) {
@@ -153,6 +153,10 @@ class _SearchMembersPageState extends State<SearchMembersPage> {
           _notFoundMessage = error.message;
         });
       }
+    } else {
+      setState(() {
+        _notFoundMessage = '';
+      });
     }
   }
 
@@ -182,9 +186,13 @@ class _SearchMembersPageState extends State<SearchMembersPage> {
     final initText =
         '${user.firstName.isEmpty ? 'N' : user.firstName[0]}${user.lastName.isEmpty ? 'S' : user.lastName[0]}';
     return GestureDetector(
-      onTap: (){
-        if(widget.chat == null){
-          constants.goToPage(context, UserPage(username: user.username,));
+      onTap: () {
+        if (widget.chat == null) {
+          constants.goToPage(
+              context,
+              UserPage(
+                username: user.username,
+              ));
         }
       },
       child: Container(
@@ -225,7 +233,7 @@ class _SearchMembersPageState extends State<SearchMembersPage> {
                 ],
               ),
             ),
-            if(widget.chat != null)
+            if (widget.chat != null)
               IconButton(
                 icon: Icon(Icons.add),
                 onPressed: () {

@@ -144,7 +144,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
       });
     } catch (e) {
       final api.ApiException error = e;
-      constants.snackBar(_scaffoldContext, error.message);
+      constants.snackBar(_scaffoldContext, error.message, Colors.red);
     }
   }
 
@@ -448,7 +448,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
                         constants.snackBar(_scaffoldContext, response.message, Colors.red);
                       }
                     });
-                    Navigator.of(context).pop();
                   },
                 ),
               ),

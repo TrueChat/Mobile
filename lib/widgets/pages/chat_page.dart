@@ -617,7 +617,9 @@ class _ChatPageState extends State<ChatPage> {
           _isEditing = false;
         });
       } else {
-        await api.sendMessage(_messageController.text, _chat.id);
+        if(_messageController.text.isNotEmpty){
+          await api.sendMessage(_messageController.text, _chat.id);
+        }
       }
       _messageController.clear();
     } catch (e) {
