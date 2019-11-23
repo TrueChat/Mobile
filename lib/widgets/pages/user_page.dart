@@ -9,6 +9,7 @@ import 'package:true_chat/widgets/pages/chat_page.dart';
 import 'package:true_chat/widgets/pages/user_settings_page.dart';
 import 'package:true_chat/api/api.dart' as api;
 import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
+import 'package:true_chat/widgets/pages/user_statistics_page.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({this.username});
@@ -108,14 +109,30 @@ class _UserPageState extends State<UserPage> {
         return _isLoading ? _loadingScreen : _body();
       }),
       backgroundColor: Theme.of(context).backgroundColor,
-      floatingActionButton: (!_isOwner && !_isLoading)
-          ? FloatingActionButton(
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget>[
+          if (_isOwner && !_isLoading)
+            FloatingActionButton(
+              heroTag: 'statistics',
+              onPressed: () {
+                constants.goToPage(context, UserStatisticsPage());
+              },
+              child: Icon(Icons.show_chart),
+            ),
+          const SizedBox(
+            width: 8.0,
+          ),
+          if (!_isOwner && !_isLoading)
+            FloatingActionButton(
+              heroTag: 'message',
               onPressed: () {
                 _goToDialogPage();
               },
               child: Icon(Icons.message),
-            )
-          : null,
+            ),
+        ],
+      ),
     );
   }
 
@@ -123,7 +140,7 @@ class _UserPageState extends State<UserPage> {
     try {
       Chat chat = await api.getDialog(username: _user.username);
       bool isChatCreated;
-      if(chat == null){
+      if (chat == null) {
         chat = Chat(
           creator: await storage_manager.getUser(),
           users: <User>[_user],

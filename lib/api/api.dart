@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/message.dart';
+import 'package:true_chat/api/models/user_statistics.dart';
 import 'package:true_chat/api/responses/chats_response.dart';
 import 'package:true_chat/api/responses/create_chat_response.dart';
 import 'package:true_chat/api/responses/edit_group_response.dart';
@@ -24,11 +25,13 @@ class ApiException implements Exception {
 }
 
 const baseUrl = 'https://true-chat.herokuapp.com/';
+const baseStatisticsUrl = 'http://truechat-stats.herokuapp.com/';
 const _registrationEndpoint = 'rest-auth/registration/';
 const _loginEndpoint = 'rest-auth/login/';
 const _profileEndpoint = 'profile';
 const _logoutEndpoint = 'rest-auth/logout/';
 const _chatsEndpoint = 'chats/';
+const _userStatisticsEndpoint = 'api/user/';
 
 String _chatEndpoint(int id) => 'chats/$id/';
 
@@ -524,6 +527,23 @@ Future<Response> changeUserData({
   }
   final message = '${res.values.toList()[0][0].toString()}';
   return Response(true, message);
+}
+
+Future<UserStatistics> getUserStatistics() async{
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final response = await http.get(
+      '$baseStatisticsUrl$_userStatisticsEndpoint',
+      headers: _authHeader(accessToken),
+    );
+    if (response.statusCode == 200) {
+      final dynamic userStatisticsJson = json.decode(utf8Decode(response));
+      return UserStatistics.fromJson(userStatisticsJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
 }
 
 //Helpers
