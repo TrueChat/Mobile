@@ -14,13 +14,13 @@ class UserStatistics {
 
   factory UserStatistics.fromJson(Map<String, dynamic> json) {
     return UserStatistics(
-      charsNum: json['chats_num'],
+      chatsNum: json['chats_num'],
       dialogsNum: json['dialogs_num'],
       groupsNum: json['groups_num'],
       daysWith: json['days_with'],
       messagesNum: json['mess_num'],
       wordsNum: json['words_num'],
-      chatsNum: json['chars_num'],
+      charsNum: json['chars_num'],
       activePeriod: json['active_period'],
       actMessagesNum: json['act_mess_num'],
       actWordsNum: json['act_words_num'],
