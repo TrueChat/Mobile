@@ -600,19 +600,21 @@ class _ChatPageState extends State<ChatPage> {
   void _attachFilePressed() {}
 
   Future<void> _sendPressed() async {
+    final String message = _messageController.text;
     try {
+      _messageController.clear();
       if (widget.isChatCreated != null) {
         _chat = await api.createDialog(username: _chat.users[0].username);
       }
       if (_isEditing) {
-        if (_messageController.text.isEmpty) {
+        if (message.isEmpty) {
           setState(() {
             _isEditing = false;
           });
           return;
         }
         await api.editMessage(
-            id: _messageToEdit.id, message: _messageController.text);
+            id: _messageToEdit.id, message: message);
         setState(() {
           _isEditing = false;
         });
@@ -621,7 +623,6 @@ class _ChatPageState extends State<ChatPage> {
           await api.sendMessage(_messageController.text, _chat.id);
         }
       }
-      _messageController.clear();
     } catch (e) {
       if (e is api.ApiException) {
         final api.ApiException error = e;
@@ -629,6 +630,7 @@ class _ChatPageState extends State<ChatPage> {
       } else {
         constants.snackBar(_scaffoldContext, e.toString(), Colors.red);
       }
+      _messageController.text = message;
     }
   }
 }

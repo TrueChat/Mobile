@@ -5,6 +5,7 @@ import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/models/chat.dart';
+import 'package:true_chat/api/models/message.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/chats_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
@@ -210,6 +211,25 @@ class _HomePageState extends State<HomePage> with RouteAware {
     return name;
   }
 
+  String _getTime(String dateTime){
+    String messageTime;
+    final RegExpMatch match =
+    constants.timeRegExp.firstMatch(dateTime);
+    messageTime = match.input.substring(match.start, match.end);
+    int messageHours = int.parse(messageTime.substring(0, 2)) + 2;
+    String replace;
+    if (messageHours >= 24) {
+      messageHours -= 24;
+      replace = '0$messageHours';
+    } else {
+      replace = messageHours.toString();
+    }
+
+    messageTime = messageTime.replaceRange(0, 2, replace.toString());
+
+    return messageTime;
+  }
+
   Widget _chatItem(int index) {
     final chat = _chats[index];
     String initText = '';
@@ -228,20 +248,28 @@ class _HomePageState extends State<HomePage> with RouteAware {
         initText = '${chatName[0][0]}';
       }
     }
-
-    final RegExpMatch match =
-        constants.timeRegExp.firstMatch(chat.lastMessage.dateCreated);
-    String messageTime = match.input.substring(match.start, match.end);
-    int messageHours = int.parse(messageTime.substring(0, 2)) + 2;
-    String replace;
-    if (messageHours >= 24) {
-      messageHours -= 24;
-      replace = '0$messageHours';
-    } else {
-      replace = messageHours.toString();
+    String messageTime;
+    String lastMessage;
+    if(chat.lastMessage != null){
+      messageTime = _getTime(chat.lastMessage.dateCreated);
+      if(chat.lastMessage != null){
+        lastMessage = chat.lastMessage.content;
+        if(chat.lastMessage.user.id == _user.id){
+          lastMessage = 'You: $lastMessage';
+        }else{
+          if(!chat.isDialog){
+            lastMessage = '${chat.lastMessage.user.username}: $lastMessage';
+          }
+        }
+      }else{
+        lastMessage = '';
+      }
+    }else{
+      messageTime = _getTime(chat.dateCreated);
     }
-
-    messageTime = messageTime.replaceRange(0, 2, replace.toString());
+    if(!chat.isDialog && chat.description.isNotEmpty && chat.description != null){
+      lastMessage = chat.description;
+    }
     return GestureDetector(
       onTap: () => _onChatItemPressed(index),
       child: Container(
@@ -268,16 +296,17 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 children: <Widget>[
                   Row(
                     children: <Widget>[
-                      Text(
-                        chat.isDialog ? _chatName(chat) : chat.name,
-                        style: Theme.of(context).textTheme.body1.copyWith(
-                              color: Colors.white,
-                            ),
-                        maxLines: 2,
+                      Expanded(
+                        child: Text(
+                          chat.isDialog ? _chatName(chat) : chat.name,
+                          style: Theme.of(context).textTheme.body1.copyWith(
+                                color: Colors.white,
+                              ),
+                          maxLines: 2,
+                        ),
                       ),
-                      const Expanded(child: SizedBox(width: 8.0,)),
                       Text(
-                        messageTime,
+                        messageTime ?? '',
                         style: Theme.of(context).textTheme.body1.copyWith(fontSize: 14.0),
                       ),
                     ],
@@ -286,7 +315,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                     height: 10.0,
                   ),
                   Text(
-                    chat.lastMessage.content ?? '',
+                    lastMessage ?? '',
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.body1,
                   ),

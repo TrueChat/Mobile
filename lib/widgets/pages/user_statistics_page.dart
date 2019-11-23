@@ -115,14 +115,15 @@ class _UserStatisticsPageState extends State<UserStatisticsPage> {
                     const SizedBox(
                       width: 8.0,
                     ),
-                    Text(
-                      'Dialogs:',
-                      style: Theme.of(context)
-                          .textTheme
-                          .body1
-                          .copyWith(color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Dialogs:',
+                        style: Theme.of(context)
+                            .textTheme
+                            .body1
+                            .copyWith(color: Colors.white),
+                      ),
                     ),
-                    const Expanded(child: SizedBox()),
                     Text(
                       _userStatistics.dialogsNum.toString(),
                       style: Theme.of(context).textTheme.body1.copyWith(
@@ -138,14 +139,15 @@ class _UserStatisticsPageState extends State<UserStatisticsPage> {
                     const SizedBox(
                       width: 8.0,
                     ),
-                    Text(
-                      'Groups:',
-                      style: Theme.of(context)
-                          .textTheme
-                          .body1
-                          .copyWith(color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Groups:',
+                        style: Theme.of(context)
+                            .textTheme
+                            .body1
+                            .copyWith(color: Colors.white),
+                      ),
                     ),
-                    const Expanded(child: SizedBox()),
                     Text(
                       _userStatistics.groupsNum.toString(),
                       style: Theme.of(context).textTheme.body1.copyWith(
@@ -179,12 +181,13 @@ class _UserStatisticsPageState extends State<UserStatisticsPage> {
               children: <Widget>[
                 Row(
                   children: <Widget>[
-                    Text(
-                      'Days since registration:',
-                      style: Theme.of(context).textTheme.body1.copyWith(
-                          fontWeight: FontWeight.bold, color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Days since registration:',
+                        style: Theme.of(context).textTheme.body1.copyWith(
+                            fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
-                    const Expanded(child: SizedBox()),
                     Text(
                       _userStatistics.daysWith.toString(),
                       style: Theme.of(context).textTheme.body1.copyWith(
@@ -197,12 +200,13 @@ class _UserStatisticsPageState extends State<UserStatisticsPage> {
                 ),
                 Row(
                   children: <Widget>[
-                    Text(
-                      'Total number of messages:',
-                      style: Theme.of(context).textTheme.body1.copyWith(
-                          fontWeight: FontWeight.bold, color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Total number of messages:',
+                        style: Theme.of(context).textTheme.body1.copyWith(
+                            fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
-                    const Expanded(child: SizedBox()),
                     Text(
                       _userStatistics.messagesNum.toString(),
                       style: Theme.of(context).textTheme.body1.copyWith(
@@ -218,14 +222,15 @@ class _UserStatisticsPageState extends State<UserStatisticsPage> {
                     const SizedBox(
                       width: 8.0,
                     ),
-                    Text(
-                      'Words:',
-                      style: Theme.of(context)
-                          .textTheme
-                          .body1
-                          .copyWith(color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Words:',
+                        style: Theme.of(context)
+                            .textTheme
+                            .body1
+                            .copyWith(color: Colors.white),
+                      ),
                     ),
-                    const Expanded(child: SizedBox()),
                     Text(
                       _userStatistics.wordsNum.toString(),
                       style: Theme.of(context).textTheme.body1.copyWith(
@@ -241,14 +246,15 @@ class _UserStatisticsPageState extends State<UserStatisticsPage> {
                     const SizedBox(
                       width: 8.0,
                     ),
-                    Text(
-                      'Characters:',
-                      style: Theme.of(context)
-                          .textTheme
-                          .body1
-                          .copyWith(color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Characters:',
+                        style: Theme.of(context)
+                            .textTheme
+                            .body1
+                            .copyWith(color: Colors.white),
+                      ),
                     ),
-                    const Expanded(child: SizedBox()),
                     Text(
                       _userStatistics.charsNum.toString(),
                       style: Theme.of(context).textTheme.body1.copyWith(
@@ -283,10 +289,12 @@ class _UserStatisticsPageState extends State<UserStatisticsPage> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
-                      'Most active period:',
-                      style: Theme.of(context).textTheme.body1.copyWith(
-                          fontWeight: FontWeight.bold, color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Most active period:',
+                        style: Theme.of(context).textTheme.body1.copyWith(
+                            fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
                     const SizedBox(
                       width: 8.0,
@@ -305,12 +313,13 @@ class _UserStatisticsPageState extends State<UserStatisticsPage> {
                 ),
                 Row(
                   children: <Widget>[
-                    Text(
-                      'Messages this period:',
-                      style: Theme.of(context).textTheme.body1.copyWith(
-                          fontWeight: FontWeight.bold, color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Messages this period:',
+                        style: Theme.of(context).textTheme.body1.copyWith(
+                            fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
-                    const Expanded(child: SizedBox()),
                     Text(
                       _userStatistics.actMessagesNum.toString(),
                       style: Theme.of(context).textTheme.body1.copyWith(
@@ -326,14 +335,15 @@ class _UserStatisticsPageState extends State<UserStatisticsPage> {
                     const SizedBox(
                       width: 8.0,
                     ),
-                    Text(
-                      'Words:',
-                      style: Theme.of(context)
-                          .textTheme
-                          .body1
-                          .copyWith(color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Words:',
+                        style: Theme.of(context)
+                            .textTheme
+                            .body1
+                            .copyWith(color: Colors.white),
+                      ),
                     ),
-                    const Expanded(child: SizedBox()),
                     Text(
                       _userStatistics.actWordsNum.toString(),
                       style: Theme.of(context).textTheme.body1.copyWith(
@@ -349,14 +359,15 @@ class _UserStatisticsPageState extends State<UserStatisticsPage> {
                     const SizedBox(
                       width: 8.0,
                     ),
-                    Text(
-                      'Characters:',
-                      style: Theme.of(context)
-                          .textTheme
-                          .body1
-                          .copyWith(color: Colors.white),
+                    Expanded(
+                      child: Text(
+                        'Characters:',
+                        style: Theme.of(context)
+                            .textTheme
+                            .body1
+                            .copyWith(color: Colors.white),
+                      ),
                     ),
-                    const Expanded(child: SizedBox()),
                     Text(
                       _userStatistics.actCharsNum.toString(),
                       style: Theme.of(context).textTheme.body1.copyWith(

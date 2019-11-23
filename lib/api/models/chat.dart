@@ -15,6 +15,8 @@ class Chat {
   factory Chat.fromJson(Map<String, dynamic> json) {
     final List<dynamic> usersList = json['users'];
 
+    final Map<String, dynamic> lastMessage = json['last_message'];
+
     return Chat(
       id: json['id'],
       name: json['name'],
@@ -23,7 +25,9 @@ class Chat {
       users: usersList.map((dynamic i) => User.fromJson(i)).toList(),
       isDialog: json['is_dialog'],
       dateCreated: json['date_created'],
-      lastMessage: Message.fromJson(json['last_message']),
+      lastMessage: lastMessage.isNotEmpty && lastMessage != null
+          ? Message.fromJson(json['last_message'])
+          : null,
     );
   }
 
@@ -56,5 +60,4 @@ class Chat {
   final bool isDialog;
   final String dateCreated;
   final Message lastMessage;
-
 }

@@ -417,7 +417,8 @@ Future<ChatsResponse> fetchChats(int page) async {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> chatsJson = json.decode(utf8Decode(response));
-      return ChatsResponse.fromJson(chatsJson);
+      final ChatsResponse chatsResponse = ChatsResponse.fromJson(chatsJson);
+      return chatsResponse;
     }
     throw ApiException(smthWentWrong);
   }
