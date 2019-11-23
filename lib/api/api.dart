@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:true_chat/api/models/chat.dart';
@@ -32,6 +33,7 @@ const _profileEndpoint = 'profile';
 const _logoutEndpoint = 'rest-auth/logout/';
 const _chatsEndpoint = 'chats/';
 const _userStatisticsEndpoint = 'api/user/';
+const _userStatisticsPlotEndpoint = 'api/user/plot/';
 
 String _chatEndpoint(int id) => 'chats/$id/';
 
@@ -542,6 +544,20 @@ Future<UserStatistics> getUserStatistics() async{
       return UserStatistics.fromJson(userStatisticsJson);
     }
     throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<Uint8List> getUserStatisticsPlot() async{
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+    Map<String, String> headers = {
+      'Content-type': 'application/json',
+      'Authorization':'Token $accessToken'
+    };
+    final response = await http.get('$baseStatisticsUrl$_userStatisticsPlotEndpoint', headers: headers);
+
+    return response.bodyBytes;
   }
   throw ApiException(noConnectionMessage);
 }
