@@ -1,3 +1,4 @@
+import 'package:true_chat/api/models/message.dart';
 import 'package:true_chat/api/models/user.dart';
 
 class Chat {
@@ -8,7 +9,8 @@ class Chat {
       this.creator,
       this.users,
       this.isDialog,
-      this.dateCreated});
+      this.dateCreated,
+      this.lastMessage});
 
   factory Chat.fromJson(Map<String, dynamic> json) {
     final List<dynamic> usersList = json['users'];
@@ -21,6 +23,7 @@ class Chat {
       users: usersList.map((dynamic i) => User.fromJson(i)).toList(),
       isDialog: json['is_dialog'],
       dateCreated: json['date_created'],
+      lastMessage: Message.fromJson(json['last_message']),
     );
   }
 
@@ -31,7 +34,8 @@ class Chat {
       User creator,
       List<User> users,
       bool isDialog,
-      String dateCreated}) {
+      String dateCreated,
+      Message lastMessage}) {
     return Chat(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -39,7 +43,8 @@ class Chat {
       creator: creator ?? this.creator,
       users: users ?? this.users,
       isDialog: isDialog ?? this.isDialog,
-      dateCreated: dateCreated ?? this.dateCreated
+      dateCreated: dateCreated ?? this.dateCreated,
+      lastMessage: lastMessage ?? this.lastMessage,
     );
   }
 
@@ -50,4 +55,6 @@ class Chat {
   final List<User> users;
   final bool isDialog;
   final String dateCreated;
+  final Message lastMessage;
+
 }

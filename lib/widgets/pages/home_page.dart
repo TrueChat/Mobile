@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/user.dart';
@@ -227,6 +228,20 @@ class _HomePageState extends State<HomePage> with RouteAware {
         initText = '${chatName[0][0]}';
       }
     }
+
+    final RegExpMatch match =
+        constants.timeRegExp.firstMatch(chat.lastMessage.dateCreated);
+    String messageTime = match.input.substring(match.start, match.end);
+    int messageHours = int.parse(messageTime.substring(0, 2)) + 2;
+    String replace;
+    if (messageHours >= 24) {
+      messageHours -= 24;
+      replace = '0$messageHours';
+    } else {
+      replace = messageHours.toString();
+    }
+
+    messageTime = messageTime.replaceRange(0, 2, replace.toString());
     return GestureDetector(
       onTap: () => _onChatItemPressed(index),
       child: Container(
@@ -248,34 +263,35 @@ class _HomePageState extends State<HomePage> with RouteAware {
               width: 10.0,
             ),
             Expanded(
-              child: chat.isDialog
-                  ? Text(
-                      _chatName(chat),
-                      style: Theme.of(context).textTheme.body1.copyWith(
-                            color: Colors.white,
-                          ),
-                      maxLines: 2,
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          chat.name,
-                          style: Theme.of(context).textTheme.body1.copyWith(
-                                color: Colors.white,
-                              ),
-                          maxLines: 2,
-                        ),
-                        const SizedBox(
-                          height: 10.0,
-                        ),
-                        Text(
-                          chat.description ?? '',
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.body1,
-                        ),
-                      ],
-                    ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        chat.isDialog ? _chatName(chat) : chat.name,
+                        style: Theme.of(context).textTheme.body1.copyWith(
+                              color: Colors.white,
+                            ),
+                        maxLines: 2,
+                      ),
+                      const Expanded(child: SizedBox(width: 8.0,)),
+                      Text(
+                        messageTime,
+                        style: Theme.of(context).textTheme.body1.copyWith(fontSize: 14.0),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                  Text(
+                    chat.lastMessage.content ?? '',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -412,65 +428,68 @@ class _HomePageState extends State<HomePage> with RouteAware {
   }
 
   Future<void> _logout() async {
-    showDialog<void>(context: context,builder: (context){
-      return AlertDialog(
-        titlePadding: EdgeInsets.zero,
-        contentPadding: EdgeInsets.zero,
-        backgroundColor: constants.backgroundColor,
-        title: Container(
-          color: constants.containerColor,
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            'Are you sure you want to log out?',
-            style: Theme.of(context).textTheme.title,
-            textAlign: TextAlign.center,
-          ),
-        ),
-        content: Padding(
-          padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              Expanded(
-                child: RaisedButton(
-                  color: constants.containerColor,
-                  child: Text(
-                    'Yes',
-                    style: Theme.of(context).textTheme.body1,
-                  ),
-                  onPressed: () {
-                    api.logout().then((response) {
-                      if (response != null && !response.isError) {
-                        Navigator.of(context).pushAndRemoveUntil<void>(
-                            MaterialPageRoute(builder: (context) => LogInPage()),
+    showDialog<void>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            titlePadding: EdgeInsets.zero,
+            contentPadding: EdgeInsets.zero,
+            backgroundColor: constants.backgroundColor,
+            title: Container(
+              color: constants.containerColor,
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Are you sure you want to log out?',
+                style: Theme.of(context).textTheme.title,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            content: Padding(
+              padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  Expanded(
+                    child: RaisedButton(
+                      color: constants.containerColor,
+                      child: Text(
+                        'Yes',
+                        style: Theme.of(context).textTheme.body1,
+                      ),
+                      onPressed: () {
+                        api.logout().then((response) {
+                          if (response != null && !response.isError) {
+                            Navigator.of(context).pushAndRemoveUntil<void>(
+                                MaterialPageRoute(
+                                    builder: (context) => LogInPage()),
                                 (Route<dynamic> route) => false);
-                      } else {
-                        constants.snackBar(_scaffoldContext, response.message, Colors.red);
-                      }
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(
-                width: 8.0,
-              ),
-              Expanded(
-                child: RaisedButton(
-                  color: constants.containerColor,
-                  child: Text(
-                    'No',
-                    style: Theme.of(context).textTheme.body1,
+                          } else {
+                            constants.snackBar(
+                                _scaffoldContext, response.message, Colors.red);
+                          }
+                        });
+                      },
+                    ),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              )
-            ],
-          ),
-        ),
-      );
-    });
-
+                  const SizedBox(
+                    width: 8.0,
+                  ),
+                  Expanded(
+                    child: RaisedButton(
+                      color: constants.containerColor,
+                      child: Text(
+                        'No',
+                        style: Theme.of(context).textTheme.body1,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  )
+                ],
+              ),
+            ),
+          );
+        });
   }
 }
