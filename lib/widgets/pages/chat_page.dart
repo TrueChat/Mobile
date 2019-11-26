@@ -29,6 +29,8 @@ class _ChatPageState extends State<ChatPage> {
 
   bool _isLoading = true;
 
+  int _index = 0;
+
   Chat _chat;
 
   String _errorMessage;
@@ -45,7 +47,7 @@ class _ChatPageState extends State<ChatPage> {
     String initText = '';
     if (_chat.isDialog) {
       final User user =
-          _chat.users[1].id == _currentUser.id ? _chat.creator : _chat.users[1];
+          _chat.users[_index].id == _currentUser.id ? _chat.creator : _chat.users[_index];
       if (user.firstName.isNotEmpty) {
         initText += user.firstName[0];
       }
@@ -124,9 +126,9 @@ class _ChatPageState extends State<ChatPage> {
         constants.goToPage(
           context,
           UserPage(
-            username: _chat.users[1].id == _currentUser.id
+            username: _chat.users[_index].id == _currentUser.id
                 ? _chat.creator.username
-                : _chat.users[1].username,
+                : _chat.users[_index].username,
           ),
         );
       },
@@ -168,6 +170,9 @@ class _ChatPageState extends State<ChatPage> {
         _currentUser = user;
       });
     });
+    if(_chat.users.length > 1){
+      _index = 1;
+    }
   }
 
   Future<void> _initData() async {
@@ -308,7 +313,7 @@ class _ChatPageState extends State<ChatPage> {
   String _dialogName(Chat chat) {
     String name = '';
     final User user =
-        chat.users[1].id == _currentUser.id ? _chat.creator : chat.users[1];
+        chat.users[_index].id == _currentUser.id ? _chat.creator : chat.users[_index];
     if (user.firstName.isNotEmpty) {
       name += '${user.firstName} ';
     }
@@ -607,7 +612,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _sendPressed() async {
-    final String message = _messageController.text;
+    final String message = _messageController.text.trim();
     try {
       _messageController.clear();
       if (widget.isChatCreated != null) {
