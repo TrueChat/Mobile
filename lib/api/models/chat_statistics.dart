@@ -13,7 +13,7 @@ class ChatStatistics{
       meanMessWords: json['mean_mess_words'],
       activeUsersNum: json['act_users_num'],
       afkUsersNum: json['afk_users_num'],
-      members: membersList.map((dynamic el) => ChatUserStatistics.fromJson(el)),
+      members: membersList.map((dynamic el) => ChatUserStatistics.fromJson(el)).toList(),
     );
   }
 

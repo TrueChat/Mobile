@@ -1,9 +1,11 @@
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/models/chat.dart';
+import 'package:true_chat/api/models/chat_statistics.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/edit_group_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
+import 'package:true_chat/widgets/pages/chat_statistics_page.dart';
 import 'package:true_chat/widgets/pages/search_members_page.dart';
 import 'package:true_chat/widgets/custom_popup_menu.dart' as custom_popup;
 import 'package:true_chat/widgets/pages/user_page.dart';
@@ -57,7 +59,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: (){
+          onPressed: () {
             Navigator.pop(context, _changedChat);
           },
         ),
@@ -68,6 +70,17 @@ class _EditGroupPageState extends State<EditGroupPage> {
                 fontWeight: FontWeight.bold,
               ),
         ),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.show_chart),
+            onPressed: () => constants.goToPage(
+              context,
+              ChatStatisticsPage(
+                chatId: widget.chat.id,
+              ),
+            ),
+          ),
+        ],
         backgroundColor: constants.appBarColor,
       ),
       body: Builder(builder: (context) {
