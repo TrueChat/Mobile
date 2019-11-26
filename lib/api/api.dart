@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:true_chat/api/models/chat.dart';
+import 'package:true_chat/api/models/chat_statistics.dart';
 import 'package:true_chat/api/models/message.dart';
 import 'package:true_chat/api/models/user_statistics.dart';
 import 'package:true_chat/api/responses/chats_response.dart';
@@ -60,6 +61,10 @@ String _addMessageEndpoint(int chatId) => 'chats/$chatId/add_message/';
 
 String _privateChatEndpoint(String username) =>
     'chats/private_chats/$username/';
+
+String _chatStatisticsEndpoint(int chatId) => 'api/chat/$chatId/';
+
+String _chatStatisticsPlotEndpoint(int chatId) => 'api/chat/$chatId/plot/';
 
 Map<String, String> _postHeaders = {
   'accept': 'application/json',
@@ -474,13 +479,13 @@ Future<Response> logout() async {
   final accessToken = await storage_manager.getAccessToken();
 
   try {
+    await storage_manager.clear();
     final response = await http.post(callUrl(_logoutEndpoint),
         headers: _authHeader(accessToken));
     if (response.statusCode >= 500) {
       return Response(true, smthWentWrong);
     }
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      await storage_manager.clear();
       return Response(false, 'Logout successfully');
     }
     return Response(true, smthWentWrong);
@@ -552,11 +557,42 @@ Future<UserStatistics> getUserStatistics() async{
 Future<Uint8List> getUserStatisticsPlot() async{
   if (await checkConnection()) {
     final accessToken = await storage_manager.getAccessToken();
-    Map<String, String> headers = {
+    final Map<String, String> headers = {
       'Content-type': 'application/json',
       'Authorization':'Token $accessToken'
     };
     final response = await http.get('$baseStatisticsUrl$_userStatisticsPlotEndpoint', headers: headers);
+
+    return response.bodyBytes;
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<ChatStatistics> getChatStatistics(int chatId) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final response = await http.get(
+      '$baseStatisticsUrl${_chatStatisticsEndpoint(chatId)}',
+      headers: _authHeader(accessToken),
+    );
+    if (response.statusCode == 200) {
+      final Map<String,dynamic> chatStatisticsJson = json.decode(utf8Decode(response));
+      return ChatStatistics.fromJson(chatStatisticsJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<Uint8List> getChatStatisticsPlot(int chatId) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+    final Map<String, String> headers = {
+      'Content-type': 'application/json',
+      'Authorization':'Token $accessToken'
+    };
+    final response = await http.get('$baseStatisticsUrl${_chatStatisticsPlotEndpoint(chatId)}', headers: headers);
 
     return response.bodyBytes;
   }

@@ -45,7 +45,7 @@ class _ChatPageState extends State<ChatPage> {
     String initText = '';
     if (_chat.isDialog) {
       final User user =
-          _chat.users[0].id == _currentUser.id ? _chat.creator : _chat.users[0];
+          _chat.users[1].id == _currentUser.id ? _chat.creator : _chat.users[1];
       if (user.firstName.isNotEmpty) {
         initText += user.firstName[0];
       }
@@ -124,9 +124,9 @@ class _ChatPageState extends State<ChatPage> {
         constants.goToPage(
           context,
           UserPage(
-            username: _chat.users[0].id == _currentUser.id
+            username: _chat.users[1].id == _currentUser.id
                 ? _chat.creator.username
-                : _chat.users[0].username,
+                : _chat.users[1].username,
           ),
         );
       },
@@ -308,7 +308,7 @@ class _ChatPageState extends State<ChatPage> {
   String _dialogName(Chat chat) {
     String name = '';
     final User user =
-        chat.users[0].id == _currentUser.id ? _chat.creator : chat.users[0];
+        chat.users[1].id == _currentUser.id ? _chat.creator : chat.users[1];
     if (user.firstName.isNotEmpty) {
       name += '${user.firstName} ';
     }
@@ -557,7 +557,7 @@ class _ChatPageState extends State<ChatPage> {
       child: Row(
         children: <Widget>[
           IconButton(
-            icon: Icon(Icons.attach_file),
+            icon: _isEditing ? Icon(Icons.close) : Icon(Icons.attach_file),
             onPressed: _attachFilePressed,
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
@@ -597,7 +597,14 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  void _attachFilePressed() {}
+  void _attachFilePressed() {
+    if(_isEditing){
+      setState(() {
+        _messageController.clear();
+        _isEditing = false;
+      });
+    }
+  }
 
   Future<void> _sendPressed() async {
     final String message = _messageController.text;
@@ -619,8 +626,8 @@ class _ChatPageState extends State<ChatPage> {
           _isEditing = false;
         });
       } else {
-        if(_messageController.text.isNotEmpty){
-          await api.sendMessage(_messageController.text, _chat.id);
+        if(message.isNotEmpty){
+          await api.sendMessage(message, _chat.id);
         }
       }
     } catch (e) {

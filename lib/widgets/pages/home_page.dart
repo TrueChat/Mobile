@@ -180,11 +180,15 @@ class _HomePageState extends State<HomePage> with RouteAware {
   }
 
   Future<void> _onChatItemPressed(int index) async {
+    final Chat chat = _chats[index];
+    if(chat.users[0].id != chat.creator.id){
+      chat.users.insert(0,chat.creator);
+    }
     final Chat result = await Navigator.push(
       context,
       MaterialPageRoute<Chat>(
         builder: (context) => ChatPage(
-          chat: _chats[index],
+          chat: chat,
         ),
       ),
     );
@@ -486,16 +490,11 @@ class _HomePageState extends State<HomePage> with RouteAware {
                         style: Theme.of(context).textTheme.body1,
                       ),
                       onPressed: () {
-                        api.logout().then((response) {
-                          if (response != null && !response.isError) {
-                            Navigator.of(context).pushAndRemoveUntil<void>(
-                                MaterialPageRoute(
-                                    builder: (context) => LogInPage()),
-                                (Route<dynamic> route) => false);
-                          } else {
-                            constants.snackBar(
-                                _scaffoldContext, response.message, Colors.red);
-                          }
+                        api.logout().whenComplete((){
+                          Navigator.of(context).pushAndRemoveUntil<void>(
+                              MaterialPageRoute(
+                                  builder: (context) => LogInPage()),
+                                  (Route<dynamic> route) => false);
                         });
                       },
                     ),

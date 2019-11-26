@@ -43,9 +43,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
     _chatNameController.text = widget.chat.name;
     _chatDescriptionController.text = widget.chat.description;
     _groupMembers = widget.chat.users;
-    if(_groupMembers[0].id != widget.chat.creator.id){
-      _groupMembers.insert(0, widget.chat.creator);
-    }
   }
 
   Future<bool> _checkYourChat() async {
