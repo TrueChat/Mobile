@@ -148,7 +148,7 @@ class _ChatStatisticsPageState extends State<ChatStatisticsPage> {
                       ),
                     ),
                     Text(
-                      _chatStatistics.meanMessWords.toString(),
+                      _chatStatistics.meanMessWords.toStringAsFixed(2),
                       style: Theme.of(context).textTheme.body1.copyWith(
                           fontWeight: FontWeight.bold, color: Colors.white),
                     ),
@@ -172,7 +172,7 @@ class _ChatStatisticsPageState extends State<ChatStatisticsPage> {
                       ),
                     ),
                     Text(
-                      _chatStatistics.meanMessChars.toString(),
+                      _chatStatistics.meanMessChars.toStringAsFixed(2),
                       style: Theme.of(context).textTheme.body1.copyWith(
                           fontWeight: FontWeight.bold, color: Colors.white),
                     ),
@@ -318,14 +318,16 @@ class _ChatStatisticsPageState extends State<ChatStatisticsPage> {
                 ),
                 Row(
                   children: <Widget>[
-                    Text(
-                      'Activity percentage:',
-                      style: Theme.of(context).textTheme.body1.copyWith(
-                          fontWeight: FontWeight.bold, color: Colors.white),
+                    Flexible(
+                      child: Text(
+                        'Activity percentage:',
+                        style: Theme.of(context).textTheme.body1.copyWith(
+                            fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
                     const Expanded(child: SizedBox()),
                     Text(
-                      '${chatUserStatistics.messagesPercent.toString()}%',
+                      '${chatUserStatistics.messagesPercent.toStringAsFixed(2)}%',
                       style: Theme.of(context).textTheme.body1.copyWith(
                           fontWeight: FontWeight.bold, color: Colors.white),
                     ),
@@ -433,7 +435,7 @@ class _ChatStatisticsPageState extends State<ChatStatisticsPage> {
                       ),
                     ),
                     Text(
-                      chatUserStatistics.meanChar.toString(),
+                      chatUserStatistics.meanChar.toStringAsFixed(2),
                       style: Theme.of(context).textTheme.body1.copyWith(
                           fontWeight: FontWeight.bold, color: Colors.white),
                     ),
