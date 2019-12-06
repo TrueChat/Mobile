@@ -519,8 +519,8 @@ class _ChatPageState extends State<ChatPage> {
         shrinkWrap: true,
         physics: const ClampingScrollPhysics(),
         itemBuilder: (context, index) => InkWell(
-          onTap: () => _imagePressed(message.images[index]),
-          onLongPress: () => _imageLongPressed(message.images[index]),
+          onTap: () => _imagePressed(message,index),
+          onLongPress: () => _imageLongPressed(message,index),
           child: Hero(
             tag: 'pk ${message.images[index].pk}',
             child: Image.network(
@@ -569,11 +569,12 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  void _imagePressed(ImageDTO imageDTO){
-    constants.goToPage(context, ImagePage(imageDTO: imageDTO,));
+  void _imagePressed(Message message,int index){
+    constants.goToPage(context, ImagePage(imageDTO: message.images[index],));
   }
 
-  void _imageLongPressed(ImageDTO imageDTO){
+  void _imageLongPressed(Message message,int index){
+    final ImageDTO imageDTO = message.images[index];
     showDialog<void>(
         context: context,
         builder: (context) {
@@ -583,7 +584,7 @@ class _ChatPageState extends State<ChatPage> {
             children: <Widget>[
               SimpleDialogOption(
                 onPressed: () {
-
+                  _deleteImage(message,index);
                   Navigator.of(context).pop();
                 },
                 child: Text(
@@ -596,6 +597,19 @@ class _ChatPageState extends State<ChatPage> {
             ],
           );
         });
+  }
+
+  Future<void> _deleteImage(Message message,int index) async{
+    try {
+      if(message.images.length == 1){
+        await api.deleteMessage(id: message.id);
+      }else{
+        await api.deleteImage(imageId: message.images[index].pk);
+      }
+    } catch (e) {
+      final api.ApiException error = e;
+      constants.snackBar(_scaffoldContext, error.message, Colors.red);
+    }
   }
 
   Future<void> _deleteMessage(int id) async {

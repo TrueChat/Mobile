@@ -70,6 +70,8 @@ String _chatStatisticsPlotEndpoint(int chatId) => 'api/chat/$chatId/plot/';
 String _imageMessageEndpoint(int messageId) =>
     'messages/$messageId/upload_photo/';
 
+String _imageDeleteEndpoint(int imageId) => 'images/$imageId/delete_image/';
+
 Map<String, String> _postHeaders = {
   'accept': 'application/json',
   'Content-Type': 'application/json; charset=utf-8',
@@ -325,6 +327,23 @@ Future<void> deleteMessage({@required int id}) async {
 
     final response = await http.delete(
       callUrl(_messageEndpoint(id)),
+      headers: _authHeader(accessToken),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode <= 300) {
+      return;
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<void> deleteImage({@required int imageId}) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final response = await http.delete(
+      callUrl(_imageDeleteEndpoint(imageId)),
       headers: _authHeader(accessToken),
     );
 
