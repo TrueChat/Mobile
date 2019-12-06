@@ -1,7 +1,6 @@
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:true_chat/api/models/chat.dart';
-import 'package:true_chat/api/models/chat_statistics.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/edit_group_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
@@ -12,16 +11,16 @@ import 'package:true_chat/widgets/pages/user_page.dart';
 import 'package:true_chat/storage/storage_manager.dart' as storage_manager;
 import 'package:true_chat/api/api.dart' as api;
 
-class EditGroupPage extends StatefulWidget {
-  const EditGroupPage({@required this.chat}) : assert(chat != null);
+class EditChatPage extends StatefulWidget {
+  const EditChatPage({@required this.chat}) : assert(chat != null);
 
   final Chat chat;
 
   @override
-  _EditGroupPageState createState() => _EditGroupPageState();
+  _EditChatPageState createState() => _EditChatPageState();
 }
 
-class _EditGroupPageState extends State<EditGroupPage> {
+class _EditChatPageState extends State<EditChatPage> {
   final _chatNameController = TextEditingController();
   final _chatDescriptionController = TextEditingController();
 

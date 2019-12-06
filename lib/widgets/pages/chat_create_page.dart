@@ -4,14 +4,14 @@ import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/responses/create_chat_response.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
 import 'package:true_chat/api/api.dart' as api;
-import 'package:true_chat/widgets/pages/edit_group_page.dart';
+import 'package:true_chat/widgets/pages/chat_edit_page.dart';
 
-class CreateGroupPage extends StatefulWidget {
+class CreateChatPage extends StatefulWidget {
   @override
-  _CreateGroupPageState createState() => _CreateGroupPageState();
+  _CreateChatPageState createState() => _CreateChatPageState();
 }
 
-class _CreateGroupPageState extends State<CreateGroupPage> {
+class _CreateChatPageState extends State<CreateChatPage> {
   final TextEditingController _groupNameController = TextEditingController();
   final TextEditingController _groupDescriptionController =
       TextEditingController();
@@ -181,7 +181,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             description: _groupDescriptionController.text);
         final Chat chat = await api.getChat(id: response.id);
         Navigator.of(context).pop();
-        constants.goToPage(context, EditGroupPage(chat: chat,));
+        constants.goToPage(context, EditChatPage(chat: chat,));
       } catch (e) {
         setState(() {
           _isLoading = false;

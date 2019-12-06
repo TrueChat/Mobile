@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/chat_statistics.dart';
 import 'package:true_chat/api/models/message.dart';
@@ -55,7 +56,7 @@ String _deleteMemberEndpoint(int chatId, String username) =>
 
 String _leaveChatEndpoint(int groupId) => 'chats/$groupId/delete_member/';
 
-String _messageEndpoint(int id) => 'chats/message/$id/';
+String _messageEndpoint(int id) => 'messages/$id/';
 
 String _addMessageEndpoint(int chatId) => 'chats/$chatId/add_message/';
 
@@ -65,6 +66,9 @@ String _privateChatEndpoint(String username) =>
 String _chatStatisticsEndpoint(int chatId) => 'api/chat/$chatId/';
 
 String _chatStatisticsPlotEndpoint(int chatId) => 'api/chat/$chatId/plot/';
+
+String _imageMessageEndpoint(int messageId) =>
+    'messages/$messageId/upload_photo/';
 
 Map<String, String> _postHeaders = {
   'accept': 'application/json',
@@ -175,7 +179,7 @@ Future<Chat> getDialog({@required String username}) async {
     if (response.statusCode == 200) {
       final List<dynamic> chatJson = json.decode(utf8Decode(response));
       return Chat.fromJson(chatJson[0]);
-    }else{
+    } else {
       return null;
     }
   }
@@ -191,8 +195,7 @@ Future<Chat> createDialog({@required String username}) async {
     final response = await http.post(url, headers: _authHeader(accessToken));
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> chatJson =
-      json.decode(utf8Decode(response));
+      final Map<String, dynamic> chatJson = json.decode(utf8Decode(response));
       return Chat.fromJson(chatJson);
     }
     throw ApiException(smthWentWrong);
@@ -283,6 +286,32 @@ Future<Message> sendMessage(String message, int chatId) async {
     if (response.statusCode == 200) {
       final Map<String, dynamic> messageJson =
           json.decode(utf8Decode(response));
+      return Message.fromJson(messageJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<Message> sendImage(File image, int messageId) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final url = callUrl(_imageMessageEndpoint(messageId));
+
+    final Map<String, String> _header = _postHeaders;
+    _header.addAll(_authHeader(accessToken));
+
+    final request = http.MultipartRequest('POST', Uri.parse(url));
+    request.files.add(http.MultipartFile.fromBytes(
+        'image', image.readAsBytesSync(),filename: 'image'));
+    request.headers.addAll(_header);
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> messageJson =
+          json.decode(utf8Decode(await http.Response.fromStream(response)));
       return Message.fromJson(messageJson);
     }
     throw ApiException(smthWentWrong);
@@ -384,7 +413,7 @@ Future<List<Message>> getMessages({@required int id}) async {
       final List<Message> messages =
           messagesJson.map((dynamic el) => Message.fromJson(el)).toList();
       return messages;
-    }else if(response.statusCode >= 300){
+    } else if (response.statusCode >= 300) {
       return <Message>[];
     }
     throw ApiException(smthWentWrong);
@@ -537,7 +566,7 @@ Future<Response> changeUserData({
   return Response(true, message);
 }
 
-Future<UserStatistics> getUserStatistics() async{
+Future<UserStatistics> getUserStatistics() async {
   if (await checkConnection()) {
     final accessToken = await storage_manager.getAccessToken();
 
@@ -554,14 +583,16 @@ Future<UserStatistics> getUserStatistics() async{
   throw ApiException(noConnectionMessage);
 }
 
-Future<Uint8List> getUserStatisticsPlot() async{
+Future<Uint8List> getUserStatisticsPlot() async {
   if (await checkConnection()) {
     final accessToken = await storage_manager.getAccessToken();
     final Map<String, String> headers = {
       'Content-type': 'application/json',
-      'Authorization':'Token $accessToken'
+      'Authorization': 'Token $accessToken'
     };
-    final response = await http.get('$baseStatisticsUrl$_userStatisticsPlotEndpoint', headers: headers);
+    final response = await http.get(
+        '$baseStatisticsUrl$_userStatisticsPlotEndpoint',
+        headers: headers);
 
     return response.bodyBytes;
   }
@@ -577,7 +608,8 @@ Future<ChatStatistics> getChatStatistics(int chatId) async {
       headers: _authHeader(accessToken),
     );
     if (response.statusCode == 200) {
-      final Map<String,dynamic> chatStatisticsJson = json.decode(utf8Decode(response));
+      final Map<String, dynamic> chatStatisticsJson =
+          json.decode(utf8Decode(response));
       return ChatStatistics.fromJson(chatStatisticsJson);
     }
     throw ApiException(smthWentWrong);
@@ -590,9 +622,11 @@ Future<Uint8List> getChatStatisticsPlot(int chatId) async {
     final accessToken = await storage_manager.getAccessToken();
     final Map<String, String> headers = {
       'Content-type': 'application/json',
-      'Authorization':'Token $accessToken'
+      'Authorization': 'Token $accessToken'
     };
-    final response = await http.get('$baseStatisticsUrl${_chatStatisticsPlotEndpoint(chatId)}', headers: headers);
+    final response = await http.get(
+        '$baseStatisticsUrl${_chatStatisticsPlotEndpoint(chatId)}',
+        headers: headers);
 
     return response.bodyBytes;
   }

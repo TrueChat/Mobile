@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,9 +9,12 @@ import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/message.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/helpers/constants.dart' as constants;
-import 'package:true_chat/widgets/pages/edit_group_page.dart';
+import 'package:true_chat/widgets/pages/chat_edit_page.dart';
 import 'package:true_chat/storage/storage_manager.dart' as storage;
+import 'package:true_chat/widgets/pages/image_page.dart';
 import 'package:true_chat/widgets/pages/user_page.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 
 class ChatPage extends StatefulWidget {
   const ChatPage({this.chat, this.isChatCreated});
@@ -46,8 +50,9 @@ class _ChatPageState extends State<ChatPage> {
   String _initText() {
     String initText = '';
     if (_chat.isDialog) {
-      final User user =
-          _chat.users[_index].id == _currentUser.id ? _chat.creator : _chat.users[_index];
+      final User user = _chat.users[_index].id == _currentUser.id
+          ? _chat.creator
+          : _chat.users[_index];
       if (user.firstName.isNotEmpty) {
         initText += user.firstName[0];
       }
@@ -73,7 +78,7 @@ class _ChatPageState extends State<ChatPage> {
       onTap: () {
         constants.goToPage(
           context,
-          EditGroupPage(
+          EditChatPage(
             chat: _chat,
           ),
         );
@@ -170,7 +175,7 @@ class _ChatPageState extends State<ChatPage> {
         _currentUser = user;
       });
     });
-    if(_chat.users.length > 1){
+    if (_chat.users.length > 1) {
       _index = 1;
     }
   }
@@ -231,7 +236,7 @@ class _ChatPageState extends State<ChatPage> {
                 final Chat result = await Navigator.push(
                   context,
                   MaterialPageRoute<Chat>(
-                    builder: (context) => EditGroupPage(
+                    builder: (context) => EditChatPage(
                       chat: _chat,
                     ),
                   ),
@@ -312,8 +317,9 @@ class _ChatPageState extends State<ChatPage> {
 
   String _dialogName(Chat chat) {
     String name = '';
-    final User user =
-        chat.users[_index].id == _currentUser.id ? _chat.creator : chat.users[_index];
+    final User user = chat.users[_index].id == _currentUser.id
+        ? _chat.creator
+        : chat.users[_index];
     if (user.firstName.isNotEmpty) {
       name += '${user.firstName} ';
     }
@@ -364,10 +370,13 @@ class _ChatPageState extends State<ChatPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
-                    Text(
-                      message.content,
-                      style: Theme.of(context).textTheme.body1,
-                    ),
+                    if (message.images.isEmpty)
+                      Text(
+                        message.content,
+                        style: Theme.of(context).textTheme.body1,
+                      ),
+                    if (message.images.isNotEmpty)
+                      _imagesList(message),
                     Text(
                       messageTime,
                       style: Theme.of(context)
@@ -474,10 +483,13 @@ class _ChatPageState extends State<ChatPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: <Widget>[
-                          Text(
-                            message.content,
-                            style: Theme.of(context).textTheme.body1,
-                          ),
+                          if(message.images.isEmpty)
+                            Text(
+                              message.content,
+                              style: Theme.of(context).textTheme.body1,
+                            ),
+                          if (message.images.isNotEmpty)
+                            _imagesList(message),
                           Text(
                             messageTime,
                             style: Theme.of(context)
@@ -502,7 +514,66 @@ class _ChatPageState extends State<ChatPage> {
     return messageWidget;
   }
 
+  Widget _imagesList(Message message){
+    return ListView.separated(
+        shrinkWrap: true,
+        physics: const ClampingScrollPhysics(),
+        itemBuilder: (context, index) => InkWell(
+          onTap: () => _imagePressed(message.images[index]),
+          onLongPress: () => _imageLongPressed(message.images[index]),
+          child: Hero(
+            tag: 'pk ${message.images[index].pk}',
+            child: Image.network(
+                message.images[index].imageURL),
+          ),
+        ),
+        separatorBuilder: (context, index) => const SizedBox(
+          height: 10.0,
+        ),
+        itemCount: message.images.length);
+  }
+
   void _messagePressed(Message message) {
+    if(message.images.isEmpty){
+      showDialog<void>(
+          context: context,
+          builder: (context) {
+            return SimpleDialog(
+              backgroundColor: constants.backgroundColor,
+              elevation: 0.0,
+              children: <Widget>[
+                SimpleDialogOption(
+                  onPressed: () {
+                    _editMessage(message);
+                  },
+                  child: Text(
+                    'Edit',
+                    style: Theme.of(context).textTheme.body1,
+                  ),
+                ),
+                SimpleDialogOption(
+                  onPressed: () {
+                    _deleteMessage(message.id);
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Delete',
+                    style: Theme.of(context).textTheme.body1.copyWith(
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          });
+    }
+  }
+
+  void _imagePressed(ImageDTO imageDTO){
+    constants.goToPage(context, ImagePage(imageDTO: imageDTO,));
+  }
+
+  void _imageLongPressed(ImageDTO imageDTO){
     showDialog<void>(
         context: context,
         builder: (context) {
@@ -512,23 +583,14 @@ class _ChatPageState extends State<ChatPage> {
             children: <Widget>[
               SimpleDialogOption(
                 onPressed: () {
-                  _editMessage(message);
-                },
-                child: Text(
-                  'Edit',
-                  style: Theme.of(context).textTheme.body1,
-                ),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  _deleteMessage(message.id);
+
                   Navigator.of(context).pop();
                 },
                 child: Text(
                   'Delete',
                   style: Theme.of(context).textTheme.body1.copyWith(
-                        color: Colors.red,
-                      ),
+                    color: Colors.red,
+                  ),
                 ),
               ),
             ],
@@ -541,7 +603,7 @@ class _ChatPageState extends State<ChatPage> {
       await api.deleteMessage(id: id);
     } catch (e) {
       final api.ApiException error = e;
-      constants.snackBar(_scaffoldContext, error.message);
+      constants.snackBar(_scaffoldContext, error.message, Colors.red);
     }
   }
 
@@ -602,12 +664,20 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  void _attachFilePressed() {
-    if(_isEditing){
+  Future<void> _attachFilePressed() async {
+    if (_isEditing) {
       setState(() {
         _messageController.clear();
         _isEditing = false;
       });
+    } else {
+      final File image =
+          await ImagePicker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        final Message message =
+            await api.sendMessage(p.basename(image.path), _chat.id);
+        api.sendImage(image, message.id);
+      }
     }
   }
 
@@ -625,13 +695,12 @@ class _ChatPageState extends State<ChatPage> {
           });
           return;
         }
-        await api.editMessage(
-            id: _messageToEdit.id, message: message);
+        await api.editMessage(id: _messageToEdit.id, message: message);
         setState(() {
           _isEditing = false;
         });
       } else {
-        if(message.isNotEmpty){
+        if (message.isNotEmpty) {
           await api.sendMessage(message, _chat.id);
         }
       }
