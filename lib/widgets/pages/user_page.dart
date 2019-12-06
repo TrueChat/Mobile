@@ -161,7 +161,7 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  String avatarText() {
+  String _avatarText() {
     String avatarText;
     if (_user.firstName.isEmpty || _user.lastName.isEmpty) {
       avatarText = 'NS';
@@ -188,7 +188,7 @@ class _UserPageState extends State<UserPage> {
                       cacheImage: true,
                       radius: 40.0,
                       initialsText: Text(
-                        avatarText(),
+                        _avatarText(),
                         style: TextStyle(fontSize: 40, color: Colors.white),
                       ),
                       backgroundColor: constants.appBarColor,

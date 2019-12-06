@@ -282,7 +282,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
         child: Row(
           children: <Widget>[
             CircularProfileAvatar(
-              '',
+              chat.images.isEmpty ? '' : chat.images[0].imageURL,
+              cacheImage: true,
               radius: 40.0,
               initialsText: Text(
                 initText.toUpperCase(),

@@ -86,7 +86,8 @@ class _ChatPageState extends State<ChatPage> {
       child: Row(
         children: <Widget>[
           CircularProfileAvatar(
-            '',
+            _chat.images.isEmpty ? '' : _chat.images[0].imageURL,
+            cacheImage: true,
             radius: 20.0,
             initialsText: Text(
               _initText(),

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:true_chat/api/models/chat.dart';
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/edit_group_response.dart';
@@ -90,6 +93,20 @@ class _EditChatPageState extends State<EditChatPage> {
     );
   }
 
+  Future<void> _onChatAvatarTapped() async {
+    final File image = await ImagePicker.pickImage(source: ImageSource.gallery);
+    try {
+      if (image != null) {
+        final Chat chat = await api.uploadChatAvatar(image, widget.chat.id);
+        setState(() {
+          _changedChat = chat;
+        });
+      }
+    } on api.ApiException catch (e) {
+      constants.snackBar(_scaffoldContext, e.message, Colors.red);
+    }
+  }
+
   Widget _body() {
     return FutureBuilder<bool>(
         future: _checkYourChat(),
@@ -117,8 +134,16 @@ class _EditChatPageState extends State<EditChatPage> {
                             child: Row(
                               children: <Widget>[
                                 CircularProfileAvatar(
-                                  '',
+                                  _changedChat == null
+                                      ? widget.chat.images.isEmpty
+                                          ? ''
+                                          : widget.chat.images[0].imageURL
+                                      : _changedChat.images.isEmpty
+                                          ? ''
+                                          : _changedChat.images[0].imageURL,
+                                  cacheImage: true,
                                   radius: 40.0,
+                                  onTap: () => _onChatAvatarTapped(),
                                   initialsText: Text(
                                     _initText.toUpperCase(),
                                     style: TextStyle(

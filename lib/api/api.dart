@@ -73,6 +73,8 @@ String _imageMessageEndpoint(int messageId) =>
 
 String _imageDeleteEndpoint(int imageId) => 'images/$imageId/delete_image/';
 
+String _uploadChatAvatarEndpoint(int chatId) => 'chats/$chatId/upload_image/';
+
 Map<String, String> _postHeaders = {
   'accept': 'application/json',
   'Content-Type': 'application/json; charset=utf-8',
@@ -342,6 +344,32 @@ Future<User> uploadAvatar(File image) async {
       final Map<String, dynamic> userJson =
       json.decode(utf8Decode(await http.Response.fromStream(response)));
       return User.fromJson(userJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<Chat> uploadChatAvatar(File image,int chatId) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final url = callUrl(_uploadChatAvatarEndpoint(chatId));
+
+    final Map<String, String> _header = _postHeaders;
+    _header.addAll(_authHeader(accessToken));
+
+    final request = http.MultipartRequest('POST', Uri.parse(url));
+    request.files.add(http.MultipartFile.fromBytes(
+        'image', image.readAsBytesSync(),filename: 'image'));
+    request.headers.addAll(_header);
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> chatJson =
+      json.decode(utf8Decode(await http.Response.fromStream(response)));
+      return Chat.fromJson(chatJson);
     }
     throw ApiException(smthWentWrong);
   }
