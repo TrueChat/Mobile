@@ -20,6 +20,7 @@ dependencies:
   circular_profile_avatar: ^1.0.2
   rxdart: ^0.22.4
   image_picker: 0.6.2+1
+  network_to_file_image: 2.1.4
 
 dev_dependencies:
   flutter_test:

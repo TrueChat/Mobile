@@ -20,6 +20,7 @@ Future<void> saveUser({@required User user}) async {
   pref.setString(emailKey, user.email);
   pref.setString(dateJoinedKey, user.dateJoined);
   pref.setString(lastLoginKey, user.lastLogin);
+  pref.setString(imageUrlKey, user.images[0].imageURL);
 }
 
 Future<User> getUser() async {

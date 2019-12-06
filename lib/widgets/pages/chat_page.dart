@@ -688,9 +688,13 @@ class _ChatPageState extends State<ChatPage> {
       final File image =
           await ImagePicker.pickImage(source: ImageSource.gallery);
       if (image != null) {
-        final Message message =
-            await api.sendMessage(p.basename(image.path), _chat.id);
-        api.sendImage(image, message.id);
+        try{
+          final Message message =
+          await api.sendMessage(p.basename(image.path), _chat.id);
+          await api.sendImage(image, message.id);
+        }on api.ApiException catch(e){
+          constants.snackBar(_scaffoldContext, e.message,Colors.red);
+        }
       }
     }
   }

@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:true_chat/api/api.dart' as api;
 import 'package:true_chat/api/models/user.dart';
 import 'package:true_chat/api/responses/edit_user_response.dart';
@@ -241,6 +244,22 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     return result;
   }
 
+  Future<void> onAvatarTapped() async{
+    final File image =
+    await ImagePicker.pickImage(source: ImageSource.gallery);
+    try{
+      if(image != null){
+        final User user = await api.uploadAvatar(image);
+        setState(() {
+          _user = user;
+        });
+      }
+    }on api.ApiException catch(e){
+      constants.snackBar(_scaffoldContext, e.message,Colors.red);
+    }
+
+  }
+
   Widget _body() {
     return Stack(
       children: <Widget>[
@@ -256,14 +275,16 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     child: Row(
                       children: <Widget>[
                         CircularProfileAvatar(
-                          '',
+                          _user == null  || _user.images.isEmpty ? '' : _user.images[0].imageURL,
+                          cacheImage: true,
                           radius: 40.0,
+                          onTap: () => onAvatarTapped(),
                           initialsText: Text(
                             _initialText(),
                             style: TextStyle(fontSize: 40, color: Colors.white),
                           ),
                           backgroundColor: constants.appBarColor,
-                          borderColor: constants.appBarColor,
+                          borderColor: constants.appBarColor
                         ),
                         const SizedBox(
                           width: 20.0,

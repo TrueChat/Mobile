@@ -32,6 +32,7 @@ const idKey = 'user_id';
 const dateJoinedKey = 'dateJoined';
 const emailKey = 'email';
 const lastLoginKey = 'lastLogin';
+const imageUrlKey = 'imageUrl';
 
 //Colors
 const Color primaryColor = Color(0xFF614bf8);

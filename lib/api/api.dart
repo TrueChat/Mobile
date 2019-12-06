@@ -36,6 +36,7 @@ const _logoutEndpoint = 'rest-auth/logout/';
 const _chatsEndpoint = 'chats/';
 const _userStatisticsEndpoint = 'api/user/';
 const _userStatisticsPlotEndpoint = 'api/user/plot/';
+const _avatarEndpoint = 'profile/upload_image/';
 
 String _chatEndpoint(int id) => 'chats/$id/';
 
@@ -315,6 +316,32 @@ Future<Message> sendImage(File image, int messageId) async {
       final Map<String, dynamic> messageJson =
           json.decode(utf8Decode(await http.Response.fromStream(response)));
       return Message.fromJson(messageJson);
+    }
+    throw ApiException(smthWentWrong);
+  }
+  throw ApiException(noConnectionMessage);
+}
+
+Future<User> uploadAvatar(File image) async {
+  if (await checkConnection()) {
+    final accessToken = await storage_manager.getAccessToken();
+
+    final url = callUrl(_avatarEndpoint);
+
+    final Map<String, String> _header = _postHeaders;
+    _header.addAll(_authHeader(accessToken));
+
+    final request = http.MultipartRequest('POST', Uri.parse(url));
+    request.files.add(http.MultipartFile.fromBytes(
+        'image', image.readAsBytesSync(),filename: 'image'));
+    request.headers.addAll(_header);
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> userJson =
+      json.decode(utf8Decode(await http.Response.fromStream(response)));
+      return User.fromJson(userJson);
     }
     throw ApiException(smthWentWrong);
   }

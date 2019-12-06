@@ -10,10 +10,12 @@ class Chat {
       this.users,
       this.isDialog,
       this.dateCreated,
-      this.lastMessage});
+      this.lastMessage,
+      this.images});
 
   factory Chat.fromJson(Map<String, dynamic> json) {
     final List<dynamic> usersList = json['users'];
+    final List<dynamic> imagesList = json['images'];
 
     final Map<String, dynamic> lastMessage = json['last_message'];
 
@@ -28,6 +30,7 @@ class Chat {
       lastMessage: lastMessage.isNotEmpty && lastMessage != null
           ? Message.fromJson(json['last_message'])
           : null,
+      images: imagesList.map((dynamic el) => ImageDTO.fromJson(el)).toList(),
     );
   }
 
@@ -39,7 +42,8 @@ class Chat {
       List<User> users,
       bool isDialog,
       String dateCreated,
-      Message lastMessage}) {
+      Message lastMessage,
+      List<ImageDTO> images}) {
     return Chat(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -49,6 +53,7 @@ class Chat {
       isDialog: isDialog ?? this.isDialog,
       dateCreated: dateCreated ?? this.dateCreated,
       lastMessage: lastMessage ?? this.lastMessage,
+      images: images ?? this.images
     );
   }
 
@@ -60,4 +65,5 @@ class Chat {
   final bool isDialog;
   final String dateCreated;
   final Message lastMessage;
+  final List<ImageDTO> images;
 }

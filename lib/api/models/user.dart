@@ -1,10 +1,12 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:true_chat/helpers/constants.dart';
 
+import 'message.dart';
+
 class User {
 
   User({this.id, this.username, this.email, this.firstName, this.lastName,
-    this.about, this.dateJoined, this.lastLogin});
+    this.about, this.dateJoined, this.lastLogin,this.images});
 
   factory User.fromPref({SharedPreferences pref}){
     return User(
@@ -15,11 +17,13 @@ class User {
         lastName: pref.getString(surnameKey),
         about: pref.getString(aboutKey),
         dateJoined: pref.getString(dateJoinedKey),
-        lastLogin: pref.getString(lastLoginKey)
+        lastLogin: pref.getString(lastLoginKey),
+        images: <ImageDTO>[ImageDTO(imageURL: pref.getString(imageUrlKey))]
     );
   }
 
   factory User.fromJson(Map<String, dynamic> json){
+    final List<dynamic> imagesList = json['images'];
     return User(
       id: json['id'],
       username: json['username'],
@@ -29,12 +33,13 @@ class User {
       about: json['about'],
       dateJoined: json['date_joined'],
       lastLogin: json['last_login'],
+      images:imagesList.map((dynamic el) => ImageDTO.fromJson(el)).toList()
     );
   }
 
   User copyWith(
       {int id, String username, String email, String firstName, String lastName,
-        String about, String dateJoined, String lastLogin}){
+        String about, String dateJoined, String lastLogin,List<ImageDTO> images}){
     return User(
       id: id ?? this.id,
       username: username ?? this.username,
@@ -44,6 +49,7 @@ class User {
       about: about ?? this.about,
       dateJoined: dateJoined ?? this.dateJoined,
       lastLogin: lastLogin ?? this.lastLogin,
+      images: images ?? this.images
     );
   }
 
@@ -55,4 +61,5 @@ class User {
   final String about;
   final String dateJoined;
   final String lastLogin;
+  final List<ImageDTO> images;
 }

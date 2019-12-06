@@ -184,7 +184,8 @@ class _UserPageState extends State<UserPage> {
                 child: Row(
                   children: <Widget>[
                     CircularProfileAvatar(
-                      '',
+                      _user == null  || _user.images.isEmpty ? '' : _user.images[0].imageURL,
+                      cacheImage: true,
                       radius: 40.0,
                       initialsText: Text(
                         avatarText(),
