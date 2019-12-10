@@ -143,7 +143,7 @@ class _EditChatPageState extends State<EditChatPage> {
                                           : _changedChat.images[0].imageURL,
                                   cacheImage: true,
                                   radius: 40.0,
-                                  onTap: () => _onChatAvatarTapped(),
+                                  onTap: () => _isYourChat ? _onChatAvatarTapped() : null,
                                   initialsText: Text(
                                     _initText.toUpperCase(),
                                     style: TextStyle(

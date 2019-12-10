@@ -371,13 +371,13 @@ class _ChatPageState extends State<ChatPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
-                    if (message.images.isEmpty)
-                      Text(
-                        message.content,
-                        style: Theme.of(context).textTheme.body1,
-                      ),
                     if (message.images.isNotEmpty)
                       _imagesList(message),
+                    const SizedBox(height: 8.0,),
+                    Text(
+                      message.content,
+                      style: Theme.of(context).textTheme.body1,
+                    ),
                     Text(
                       messageTime,
                       style: Theme.of(context)
@@ -521,7 +521,7 @@ class _ChatPageState extends State<ChatPage> {
         physics: const ClampingScrollPhysics(),
         itemBuilder: (context, index) => InkWell(
           onTap: () => _imagePressed(message,index),
-          onLongPress: () => _imageLongPressed(message,index),
+          onLongPress: () => message.user.id == _currentUser.id ? _imageLongPressed(message,index) : null,
           child: Hero(
             tag: 'pk ${message.images[index].pk}',
             child: Image.network(
@@ -575,7 +575,6 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _imageLongPressed(Message message,int index){
-    final ImageDTO imageDTO = message.images[index];
     showDialog<void>(
         context: context,
         builder: (context) {

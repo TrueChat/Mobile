@@ -271,7 +271,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
     }else{
       messageTime = _getTime(chat.dateCreated);
     }
-    if(!chat.isDialog && chat.description.isNotEmpty && chat.description != null){
+    if(!chat.isDialog && chat.description != null && chat.description.isNotEmpty){
       lastMessage = chat.description;
     }
     return GestureDetector(
@@ -345,7 +345,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 child: Row(
                   children: <Widget>[
                     CircularProfileAvatar(
-                      _user == null || _user.images.isEmpty ? '' : _user.images[0].imageURL,
+                      _user == null || _user.images == null || _user.images.isEmpty ? '' : _user.images[0].imageURL,
                       cacheImage: true,
                       radius: 40.0,
                       initialsText: Text(
