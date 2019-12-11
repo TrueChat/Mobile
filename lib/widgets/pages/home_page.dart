@@ -181,8 +181,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
   Future<void> _onChatItemPressed(int index) async {
     final Chat chat = _chats[index];
-    if(chat.users[0].id != chat.creator.id){
-      chat.users.insert(0,chat.creator);
+    if (chat.users.isEmpty || chat.users[0].id != chat.creator.id) {
+      chat.users.insert(0, chat.creator);
     }
     final Chat result = await Navigator.push(
       context,
@@ -215,10 +215,9 @@ class _HomePageState extends State<HomePage> with RouteAware {
     return name;
   }
 
-  String _getTime(String dateTime){
+  String _getTime(String dateTime) {
     String messageTime;
-    final RegExpMatch match =
-    constants.timeRegExp.firstMatch(dateTime);
+    final RegExpMatch match = constants.timeRegExp.firstMatch(dateTime);
     messageTime = match.input.substring(match.start, match.end);
     int messageHours = int.parse(messageTime.substring(0, 2)) + 2;
     String replace;
@@ -254,25 +253,35 @@ class _HomePageState extends State<HomePage> with RouteAware {
     }
     String messageTime;
     String lastMessage;
-    if(chat.lastMessage != null){
+    if (chat.lastMessage != null) {
       messageTime = _getTime(chat.lastMessage.dateCreated);
-      if(chat.lastMessage != null){
+      if (chat.lastMessage != null) {
         lastMessage = chat.lastMessage.content;
-        if(chat.lastMessage.user.id == _user.id){
+        if (chat.lastMessage.user.id == _user.id) {
           lastMessage = 'You: $lastMessage';
-        }else{
-          if(!chat.isDialog){
+        } else {
+          if (!chat.isDialog) {
             lastMessage = '${chat.lastMessage.user.username}: $lastMessage';
           }
         }
-      }else{
+      } else {
         lastMessage = '';
       }
-    }else{
+    } else {
       messageTime = _getTime(chat.dateCreated);
     }
-    if(!chat.isDialog && chat.description != null && chat.description.isNotEmpty){
+    if (!chat.isDialog &&
+        chat.description != null &&
+        chat.description.isNotEmpty) {
       lastMessage = chat.description;
+    }
+    String avatarUrl;
+    if(chat.isDialog){
+      final User user =
+      chat.users[0].id == _user.id ? chat.creator : chat.users[0];
+      avatarUrl = user.images.isEmpty ? '' : user.images[0].imageURL;
+    }else{
+      avatarUrl = chat.images.isEmpty ? '' : chat.images[0].imageURL;
     }
     return GestureDetector(
       onTap: () => _onChatItemPressed(index),
@@ -282,7 +291,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
         child: Row(
           children: <Widget>[
             CircularProfileAvatar(
-              chat.images.isEmpty ? '' : chat.images[0].imageURL,
+              avatarUrl,
               cacheImage: true,
               radius: 40.0,
               initialsText: Text(
@@ -312,7 +321,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
                       ),
                       Text(
                         messageTime ?? '',
-                        style: Theme.of(context).textTheme.body1.copyWith(fontSize: 14.0),
+                        style: Theme.of(context)
+                            .textTheme
+                            .body1
+                            .copyWith(fontSize: 14.0),
                       ),
                     ],
                   ),
@@ -345,7 +357,12 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 child: Row(
                   children: <Widget>[
                     CircularProfileAvatar(
-                      _user == null || _user.images == null || _user.images.isEmpty ? '' : _user.images[0].imageURL,
+                      _user == null ||
+                              _user.images == null ||
+                              _user.images.isEmpty ||
+                              _user.images[0].imageURL == null
+                          ? ''
+                          : _user.images[0].imageURL,
                       cacheImage: true,
                       radius: 40.0,
                       initialsText: Text(
@@ -492,11 +509,11 @@ class _HomePageState extends State<HomePage> with RouteAware {
                         style: Theme.of(context).textTheme.body1,
                       ),
                       onPressed: () {
-                        api.logout().whenComplete((){
+                        api.logout().whenComplete(() {
                           Navigator.of(context).pushAndRemoveUntil<void>(
                               MaterialPageRoute(
                                   builder: (context) => LogInPage()),
-                                  (Route<dynamic> route) => false);
+                              (Route<dynamic> route) => false);
                         });
                       },
                     ),

@@ -127,6 +127,14 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _dialogTitle() {
+    String avatarUrl;
+    if(_chat.isDialog){
+      final User user =
+      _chat.users[0].id == _currentUser.id ? _chat.creator : _chat.users[0];
+      avatarUrl = user.images.isEmpty ? '' : user.images[0].imageURL;
+    }else{
+      avatarUrl = _chat.images.isEmpty ? '' : _chat.images[0].imageURL;
+    }
     return GestureDetector(
       onTap: () {
         constants.goToPage(
@@ -141,7 +149,7 @@ class _ChatPageState extends State<ChatPage> {
       child: Row(
         children: <Widget>[
           CircularProfileAvatar(
-            '',
+            avatarUrl,
             radius: 20.0,
             initialsText: Text(
               _initText(),

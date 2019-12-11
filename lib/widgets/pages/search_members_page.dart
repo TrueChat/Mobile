@@ -195,13 +195,14 @@ class _SearchMembersPageState extends State<SearchMembersPage> {
               ));
         }
       },
+
       child: Container(
         padding: const EdgeInsets.all(8.0),
         color: constants.containerColor,
         child: Row(
           children: <Widget>[
             CircularProfileAvatar(
-              initText,
+              user.images.isEmpty ? '' : user.images[0].imageURL,
               radius: 30.0,
               initialsText: Text(
                 initText,
