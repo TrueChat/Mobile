@@ -32,7 +32,9 @@ class _SearchMembersPageState extends State<SearchMembersPage> {
   void initState() {
     super.initState();
     _addedUsers = widget.chat == null ? null : widget.chat.users;
-    _addedUsers.removeAt(0);
+    if(_addedUsers != null && _addedUsers.isNotEmpty){
+      _addedUsers.removeAt(0);
+    }
   }
 
   @override
@@ -136,16 +138,8 @@ class _SearchMembersPageState extends State<SearchMembersPage> {
       try {
         _addUsersList = await api.searchUser(query: query);
         if (widget.chat != null) {
-          final List<User> toRemove = [];
-          for (User u in _addUsersList) {
-            if (_isUserInList(u, _addedUsers) ||
-                widget.chat.creator.id == u.id) {
-              toRemove.add(u);
-            }
-          }
-          if(toRemove.isNotEmpty){
-            _addUsersList.removeWhere( (e) => toRemove.contains(e));
-          }
+          _addUsersList.removeWhere( (e) => _isUserInList(e, _addedUsers) ||
+              widget.chat.creator.id == e.id);
         }
         setState(() {
           if (_addUsersList.isEmpty) {

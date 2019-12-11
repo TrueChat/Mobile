@@ -106,19 +106,14 @@ class _ChatPageState extends State<ChatPage> {
               children: <Widget>[
                 Text(
                   _chat.name,
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .body1
-                      .copyWith(
-                    color: constants.fontColor,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.body1.copyWith(
+                        color: constants.fontColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 Text(
                   '${_chat.users.length} members',
-                  style: Theme
-                      .of(context)
+                  style: Theme.of(context)
                       .textTheme
                       .body1
                       .copyWith(color: constants.fontColor),
@@ -134,8 +129,12 @@ class _ChatPageState extends State<ChatPage> {
   Widget _dialogTitle() {
     String avatarUrl;
     if (_chat.isDialog) {
-      final User user =
-      _chat.users[1].id == _currentUser.id ? _chat.creator : _chat.users[1];
+      User user;
+      if(_chat.users.length > 1){
+        user = _chat.users[1].id == _currentUser.id ? _chat.creator : _chat.users[1];
+      }else{
+        user = _chat.users[0].id == _currentUser.id ? _chat.creator : _chat.users[0];
+      }
       avatarUrl = user.images.isEmpty ? '' : user.images[0].imageURL;
     } else {
       avatarUrl = _chat.images.isEmpty ? '' : _chat.images[0].imageURL;
@@ -168,14 +167,10 @@ class _ChatPageState extends State<ChatPage> {
           ),
           Text(
             _dialogName(_chat),
-            style: Theme
-                .of(context)
-                .textTheme
-                .body1
-                .copyWith(
-              color: constants.fontColor,
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(context).textTheme.body1.copyWith(
+                  color: constants.fontColor,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
         ],
       ),
@@ -243,9 +238,9 @@ class _ChatPageState extends State<ChatPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-          _chat.users.removeAt(0);
-          Navigator.pop(context, _chat);
-        },
+            _chat.users.removeAt(0);
+            Navigator.pop(context, _chat);
+          },
         ),
         title: _chat.isDialog ? _dialogTitle() : _chatTitle(),
         backgroundColor: constants.appBarColor,
@@ -257,10 +252,9 @@ class _ChatPageState extends State<ChatPage> {
                 final Chat result = await Navigator.push(
                   context,
                   MaterialPageRoute<Chat>(
-                    builder: (context) =>
-                        EditChatPage(
-                          chat: _chat,
-                        ),
+                    builder: (context) => EditChatPage(
+                      chat: _chat,
+                    ),
                   ),
                 );
                 if (result != null) {
@@ -304,27 +298,24 @@ class _ChatPageState extends State<ChatPage> {
     return Flexible(
       child: _errorMessage == null
           ? ListView.separated(
-        padding: const EdgeInsets.all(8.0),
-        shrinkWrap: true,
-        reverse: true,
-        controller: _scrollController,
-        itemBuilder: (context, index) {
-          return _messageItem(index);
-        },
-        separatorBuilder: (context, index) {
-          return _messageSeparator(index);
-        },
-        itemCount: _messages.length,
-      )
+              padding: const EdgeInsets.all(8.0),
+              shrinkWrap: true,
+              reverse: true,
+              controller: _scrollController,
+              itemBuilder: (context, index) {
+                return _messageItem(index);
+              },
+              separatorBuilder: (context, index) {
+                return _messageSeparator(index);
+              },
+              itemCount: _messages.length,
+            )
           : Center(
-        child: Text(
-          _errorMessage,
-          style: Theme
-              .of(context)
-              .textTheme
-              .title,
-        ),
-      ),
+              child: Text(
+                _errorMessage,
+                style: Theme.of(context).textTheme.title,
+              ),
+            ),
     );
   }
 
@@ -361,7 +352,7 @@ class _ChatPageState extends State<ChatPage> {
     final Message message = _messages[index];
 
     final RegExpMatch match =
-    constants.timeRegExp.firstMatch(message.dateCreated);
+        constants.timeRegExp.firstMatch(message.dateCreated);
     String messageTime = match.input.substring(match.start, match.end);
     int messageHours = int.parse(messageTime.substring(0, 2)) + 2;
     String replace;
@@ -395,20 +386,17 @@ class _ChatPageState extends State<ChatPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
-                    if (message.images.isNotEmpty)
-                      _imagesList(message),
-                    const SizedBox(height: 8.0,),
+                    if (message.images.isNotEmpty) _imagesList(message),
+                    const SizedBox(
+                      height: 8.0,
+                    ),
                     Text(
                       message.content,
-                      style: Theme
-                          .of(context)
-                          .textTheme
-                          .body1,
+                      style: Theme.of(context).textTheme.body1,
                     ),
                     Text(
                       messageTime,
-                      style: Theme
-                          .of(context)
+                      style: Theme.of(context)
                           .textTheme
                           .body1
                           .copyWith(fontSize: 14.0),
@@ -504,32 +492,23 @@ class _ChatPageState extends State<ChatPage> {
                       if (isLastMessage && !_chat.isDialog)
                         Text(
                           name,
-                          style: Theme
-                              .of(context)
-                              .textTheme
-                              .body1
-                              .copyWith(
-                            color: constants.accentColor,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.body1.copyWith(
+                                color: constants.accentColor,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: <Widget>[
-                          if(message.images.isEmpty)
+                          if (message.images.isEmpty)
                             Text(
                               message.content,
-                              style: Theme
-                                  .of(context)
-                                  .textTheme
-                                  .body1,
+                              style: Theme.of(context).textTheme.body1,
                             ),
-                          if (message.images.isNotEmpty)
-                            _imagesList(message),
+                          if (message.images.isNotEmpty) _imagesList(message),
                           Text(
                             messageTime,
-                            style: Theme
-                                .of(context)
+                            style: Theme.of(context)
                                 .textTheme
                                 .body1
                                 .copyWith(fontSize: 14.0),
@@ -555,23 +534,19 @@ class _ChatPageState extends State<ChatPage> {
     return ListView.separated(
         shrinkWrap: true,
         physics: const ClampingScrollPhysics(),
-        itemBuilder: (context, index) =>
-            InkWell(
+        itemBuilder: (context, index) => InkWell(
               onTap: () => _imagePressed(message, index),
-              onLongPress: () =>
-              message.user.id == _currentUser.id
+              onLongPress: () => message.user.id == _currentUser.id
                   ? _imageLongPressed(message, index)
                   : null,
               child: Hero(
                 tag: 'pk ${message.images[index].pk}',
-                child: Image.network(
-                    message.images[index].imageURL),
+                child: Image.network(message.images[index].imageURL),
               ),
             ),
-        separatorBuilder: (context, index) =>
-        const SizedBox(
-          height: 10.0,
-        ),
+        separatorBuilder: (context, index) => const SizedBox(
+              height: 10.0,
+            ),
         itemCount: message.images.length);
   }
 
@@ -590,10 +565,7 @@ class _ChatPageState extends State<ChatPage> {
                   },
                   child: Text(
                     'Edit',
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .body1,
+                    style: Theme.of(context).textTheme.body1,
                   ),
                 ),
                 SimpleDialogOption(
@@ -603,13 +575,9 @@ class _ChatPageState extends State<ChatPage> {
                   },
                   child: Text(
                     'Delete',
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .body1
-                        .copyWith(
-                      color: Colors.red,
-                    ),
+                    style: Theme.of(context).textTheme.body1.copyWith(
+                          color: Colors.red,
+                        ),
                   ),
                 ),
               ],
@@ -619,7 +587,11 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _imagePressed(Message message, int index) {
-    constants.goToPage(context, ImagePage(imageDTO: message.images[index],));
+    constants.goToPage(
+        context,
+        ImagePage(
+          imageDTO: message.images[index],
+        ));
   }
 
   void _imageLongPressed(Message message, int index) {
@@ -637,13 +609,9 @@ class _ChatPageState extends State<ChatPage> {
                 },
                 child: Text(
                   'Delete',
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .body1
-                      .copyWith(
-                    color: Colors.red,
-                  ),
+                  style: Theme.of(context).textTheme.body1.copyWith(
+                        color: Colors.red,
+                      ),
                 ),
               ),
             ],
@@ -705,13 +673,9 @@ class _ChatPageState extends State<ChatPage> {
                 border: InputBorder.none,
                 hintText: 'Your message',
               ),
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .body1
-                  .copyWith(
-                color: Colors.white,
-              ),
+              style: Theme.of(context).textTheme.body1.copyWith(
+                    color: Colors.white,
+                  ),
               cursorColor: constants.fontColor,
               onSubmitted: (query) {
                 _sendPressed();
@@ -742,11 +706,11 @@ class _ChatPageState extends State<ChatPage> {
       });
     } else {
       final File image =
-      await ImagePicker.pickImage(source: ImageSource.gallery);
+          await ImagePicker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         try {
           final Message message =
-          await api.sendMessage(p.basename(image.path), _chat.id);
+              await api.sendMessage(p.basename(image.path), _chat.id);
           await api.sendImage(image, message.id);
         } on api.ApiException catch (e) {
           constants.snackBar(_scaffoldContext, e.message, Colors.red);
