@@ -458,7 +458,7 @@ class _EditChatPageState extends State<EditChatPage> {
         child: Row(
           children: <Widget>[
             CircularProfileAvatar(
-              initText,
+              user == null  || user.images.isEmpty ? '' : user.images[0].imageURL,
               radius: 30.0,
               initialsText: Text(
                 initText,

@@ -166,7 +166,7 @@ class _UserPageState extends State<UserPage> {
     if (_user.firstName.isEmpty || _user.lastName.isEmpty) {
       avatarText = 'NS';
     } else {
-      avatarText = '${_user.firstName[0]}${_user.lastName[0]}';
+      avatarText = '${_user.firstName[0]}${_user.lastName[0]}'.toUpperCase();
     }
     return avatarText;
   }
